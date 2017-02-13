@@ -1,4 +1,4 @@
-Inductive N:Set:=
+Inductive N:Set:= (*this is a comment line*)
 |zero: N
 |succ:N->N.
 
