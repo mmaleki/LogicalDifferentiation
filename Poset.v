@@ -1,4 +1,4 @@
-Require Import Booleanalgebra.
+Require Import BooleanAlgebra.
 
 Structure Poset := {
   poset_carrier :> Type;
