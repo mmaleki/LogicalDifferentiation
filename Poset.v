@@ -32,25 +32,11 @@ Proof.
   refine {| poset_carrier := carrier B ;
             leq := fun x y => (x & y = x)
          |}.
--intros. apply and_p_p.
--intros.
-rewrite <-H.
-rewrite<-and_p_qr.
-rewrite->H0.
-trivial.
--intros. rewrite<-H. rewrite and_pq. assumption.
+  -intros. apply and_p_p.
+  -intros.
+   rewrite <- H.
+   rewrite <- and_p_qr.
+   rewrite -> H0.
+   trivial.
+  -intros. rewrite <- H. rewrite and_pq. assumption.
 Qed.
-
-
-Structure morphism(A B:BooleanAlgebra):={
-f:A->B;
-mor_and: forall x y,f (x & y)=(f x) & (f y);
-mor_or: forall x y, f( x | y)=(f x) | (f y);
-mor_neg: forall x, f(! x)=! (f x)
-}.
-
-
-
-
-
-
