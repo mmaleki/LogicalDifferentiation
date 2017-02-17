@@ -56,13 +56,11 @@ Proof.
   -intros. rewrite->mor_neg. rewrite ->mor_neg. reflexivity.
 Defined.
 
+
+
 Notation "g 'o' f" := (compose _ _ _ g f) (at level 65, left associativity).
 
-Lemma id_o (A B : BooleanAlgebra) (f : Hom A B) : compose id f =f.
- 
 
-Lemma hom_assoc: forall {A B C D:BooleanAlgebra} (f : Hom A B) (g : Hom B C)(h : Hom C D),
-compose f (compose g h)=compose (compose f g) h.
 Lemma Hom_0 (A B : BooleanAlgebra) (f : Hom A B) :
   f 0 = 0.
 Proof.
