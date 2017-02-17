@@ -31,6 +31,48 @@ Notation "! p" := (neg _ p) (at level 20).
 Notation "1" := (one _).
 Notation "0" := (zero _).
 
+Structure Hom (A B : BooleanAlgebra) := {
+  action :> A -> B;
+  mor_and: forall x y, action (x & y) = action x & action y;
+  mor_or: forall x y, action (x | y) = action x | action y;
+  mor_neg: forall x, action (! x) = !(action x)
+}.
+
+Lemma id (B : BooleanAlgebra) : Hom B B.
+Proof.
+  refine {| action := fun x => x |} ; reflexivity.
+Defined.
+
+Definition compose A B C :
+  Hom B C -> Hom A B -> Hom A C.
+Proof.
+  intros g f.
+  refine {| action := fun x => g (f x) |}.
+  -intros.
+  rewrite->mor_and.
+  rewrite->mor_and.
+  reflexivity.
+  -intros. rewrite->mor_or. rewrite->mor_or. reflexivity.
+  -intros. rewrite->mor_neg. rewrite ->mor_neg. reflexivity.
+Defined.
+
+Notation "g 'o' f" := (compose _ _ _ g f) (at level 65, left associativity).
+
+Lemma id_o (A B : BooleanAlgebra) (f : Hom A B) : compose id f =f.
+ 
+
+Lemma hom_assoc: forall {A B C D:BooleanAlgebra} (f : Hom A B) (g : Hom B C)(h : Hom C D),
+compose f (compose g h)=compose (compose f g) h.
+Lemma Hom_0 (A B : BooleanAlgebra) (f : Hom A B) :
+  f 0 = 0.
+Proof.
+  rewrite <- (and_p_Np A 0).
+  rewrite mor_and.
+  rewrite mor_neg.
+  rewrite and_p_Np.
+  reflexivity.
+Qed.
+
 Lemma and_pq_r (B : BooleanAlgebra) (p q r : B) :
   (p | q) & r = p & r | q & r.
 Proof.
@@ -154,18 +196,3 @@ intros.
 -apply or_pq.
 -apply and_pq.
 Defined.
-
-(*Defining the Boolean algebra morphism*)
-
-
-
-
-
-
-
-
-
-
-
-
-
