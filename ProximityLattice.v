@@ -22,48 +22,43 @@ Structure Lattice :={
 
 Notation "p & q" := (lattice_and _ p q) (at level 40, left associativity).
 Notation "p | q" := (lattice_or _ p q) (at level 50, left associativity).
-Notation "1" := (lattice_zero _).
+Notation "1" := (lattice_one _).
 Notation "0" := (lattice_zero _).
 
-Lemma firstt(B: Lattice) :  1 & 1 = 1.
-
-Structure Poset := {
-  poset_carrier :> Type;
-  leq : poset_carrier -> poset_carrier -> Prop ;
-  leq_refl : forall x, leq x x ;
-  leq_tran : forall x y z, leq x y -> leq y z -> leq x z;
-  leq_antisym : forall x y, leq x y -> leq y x -> x = y
+Structure lattice_morphism ( A B : Lattice):={
+l_mor:> A ->B;
+l_mor_and : forall x y , l_mor ( x & y) = l_mor x & l_mor y;
+l_mor_or : forall x y , l_mor (x | y) = l_mor x | l_mor y;
+l_mor_zero : l_mor 0 = 0;
+l_mor_one : l_mor 1 = 1
 }.
 
-Notation "x <= y" := (leq _ x y) (at level 70, no associativity).
 
-Definition discrete (A : Type) : Poset.
+Definition id_morphism{A : Lattice}: lattice_morphism A A.
 Proof.
-  refine {| poset_carrier := A ; leq := (fun x y => x = y) |}.
-  - auto.
-  - intros. transitivity y ; auto.
-  - intros. assumption.
+refine {| l_mor := fun x => x |};reflexivity.
 Defined.
 
-Lemma assosfour {B:BooleanAlgebra}(y z:B):
-y & z & z= y & z.
+Definition comp {A B C:Lattice}: lattice_morphism B C->lattice_morphism A B -> lattice_morphism A C.
 Proof.
-rewrite<-and_p_qr.
-rewrite ->and_p_p.
-trivial.
-Qed.
+intros g f.
+ refine {| l_mor := fun x => g (f x) |}.
+-intros. rewrite l_mor_and. rewrite l_mor_and. reflexivity.
+-intros; repeat (rewrite l_mor_or). reflexivity.
+-intros. repeat (rewrite l_mor_zero). reflexivity.
+-intros. repeat (rewrite l_mor_one). reflexivity.
+Defined.
 
-(* Every Boolean algebra is a poset. *)
-Definition BAPoset (B : BooleanAlgebra) : Poset.
+Notation " g 'o' f" := (comp g f) (at level 65, left associativity).
+
+Lemma id_o(A B : Lattice) (f : lattice_morphism A B) (x :A):  (id_morphism o f) x = f x.
 Proof.
-  refine {| poset_carrier := carrier B ;
-            leq := fun x y => (x & y = x)
-         |}.
-  -intros. apply and_p_p.
-  -intros.
-   rewrite <- H.
-   rewrite <- and_p_qr.
-   rewrite -> H0.
-   trivial.
-  -intros. rewrite <- H. rewrite and_pq. assumption.
-Qed.
+Admitted.
+
+Lemma assos_l (A B C D : Lattice)(f : lattice_morphism A B) (g : lattice_morphism B C) (h : lattice_morphism C D): h o (g o f) = (h o g) o f.
+Proof.
+Admitted. 
+
+
+
+
