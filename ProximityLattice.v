@@ -81,8 +81,9 @@ Notation "x << y" := (plt_approx _ x y)(at level 70, no associativity).
 Lemma or_approx_monotone_r (A : ProximityLattice) (x y1 y2 : A) :
   y1 << y2 -> x || y1 << x || y2.
 Proof.
-  admit.
 Admitted.
+
+
 
 Section FiniteJoins.
   (* Definition and basic facts about finite joins. *)
@@ -146,5 +147,65 @@ Proof.
             * assumption.
       }
 Admitted.
+
+(*
+Inductive Colors := White | Black.
+
+Definition color_and (b1 : Colors) (b2 : Colors) : Colors := 
+  match b1 with 
+  | White => White 
+  | Black => b2
+  end.
+
+Definition color_or (b1 : Colors) (b2 : Colors) : Colors := 
+  match b1 with 
+  | White => b2 
+  | Black => Black
+  end.
+
+Definition Two_Lattice : Lattice.
+Proof.
+   refine{| lt_carrier := Colors;
+            lt_and := fun x y => color_and x y;
+            lt_or := fun x y => color_or x y;
+            lt_zero := White;
+            lt_one := Black
+|}. 
+intros.
+apply lt_and_commute.
+*)
+
+Definition Two_Lattice : Lattice.
+Proof.
+  (* We use bool and its operations from the standard library *)
+  refine {| lt_carrier := bool ;
+            lt_and := andb;
+            lt_or := orb;
+            lt_zero := false;
+            lt_one := true|}; repeat (intros [|]); reflexivity.
+Qed.
+
+
+(*Definition Two_hom(b1 b2 : bool): Prop :=
+  match b1, b2 with
+    | true , true => True
+    | true , false => False
+    | false , true => True
+    | false , false => True
+  end.
+
+
+Lemma Ttt: Two_hom true true =True.
+Proof.
+reflexivity.
+Qed.*)
+
+Definition Two_Proximity : ProximityLattice.
+Proof.
+   refine{| plt_lattice := Two_Lattice ; plt_approx := fun x y => x= x ||y |}; repeat (intros [|]).
+  Admitted.
+
+
+
 
 
