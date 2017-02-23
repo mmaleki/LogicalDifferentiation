@@ -51,14 +51,53 @@ Defined.
 
 Notation " g 'o' f" := (comp g f) (at level 65, left associativity).
 
-Lemma id_o(A B : Lattice) (f : lattice_morphism A B) (x :A):  (id_morphism o f) x = f x.
+Lemma id_o(A B : Lattice) (f : lattice_morphism A B) (x: A):  (id_morphism o f) x  = f x.
 Proof.
-Admitted.
+reflexivity.
+Qed.
 
-Lemma assos_l (A B C D : Lattice)(f : lattice_morphism A B) (g : lattice_morphism B C) (h : lattice_morphism C D): h o (g o f) = (h o g) o f.
+Lemma assos_l (A B C D : Lattice)(f : lattice_morphism A B)
+(g : lattice_morphism B C) (h : lattice_morphism C D) (x : A):
+(h o (g o f)) x = ((h o g) o f) x.
 Proof.
-Admitted. 
+reflexivity.
+Qed.
 
+Structure ProximityLattice :={
+p_lattice :> Lattice;
+p_approx : p_lattice  -> p_lattice  -> Prop;
+o_1r : forall x y z , p_approx x z /\ p_approx y z -> p_approx (x | y) z;
+o_1ll : forall x y z, p_approx (x | y) z -> p_approx x z;
+o_1lr : forall x y z, p_approx (x | y) z -> (p_approx y z /\ p_approx y z);
+o_2 : forall x , x <> 1 -> p_approx x 1;
+o_3 : forall x y z , p_approx x y /\ p_approx x z <-> p_approx x (y & z);
+o_4 : forall x y z , p_approx x (y | z) -> (exists y' z' , p_approx y' y
+      /\ p_approx z' z /\ p_approx x (y' | z'));
+o_trans : forall x y z, p_approx x y /\ p_approx y z -> p_approx x z;
+o_inter : forall x y, p_approx x y -> (exists z, p_approx x z /\ p_approx z y)
+}.
 
+Notation "x << y" := (p_approx _ x y)(at level 70, no associativity).
+
+Structure ApproximableMapping (A B : ProximityLattice) :={
+  relation : A -> B -> Prop;
+  relation_m1 : forall x y , relation x y -> (exists z, x<< z /\ relation z y);
+  relation_m2 : forall x y , relation x y -> (exists z, z<< y /\ relation x z);
+  relation_m3left : forall x y z , ( relation x z /\ relation y z ) -> relation ( x | y) z;
+  relation_m3right : forall x y z , relation (x | y) z -> ( relation x z /\ relation y z );
+  relation_m4 : forall x, x << 1 -> relation x 1;
+  relation_m5left : forall x y z , ( relation x y /\ relation x z) -> relation x (y & z);
+  relation_m5right : forall x y z , relation x ( y & z) -> (relation x y /\ relation x z);
+  relation_m6 : forall x y z , relation x ( y | z) -> (exists N , x << N /\ exists m, relation N m)
+}.
+
+Definition id_approx {A : ProximityLattice} : ApproximableMapping A A.
+Proof.
+refine {| relation := fun x y => x << y|}.
+- intros. 
+admit.
+-admit.
+-admit.
+-intros. rewrite ->(o_1ll A x y z).
 
 
