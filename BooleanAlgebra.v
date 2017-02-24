@@ -71,8 +71,9 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma id_comp(A B : BooleanAlgebra)(f : Hom A B) : (id B) o f = f.
-Lemma assos_o (A B C D : BooleanAlgebra)(f : Hom A B) (g : Hom B C) (h : Hom C D): h o (g o f) = (h o g) o f. 
+(* Lemma id_comp(A B : BooleanAlgebra)(f : Hom A B) : (id B) o f = f. *)
+
+(* Lemma assos_o (A B C D : BooleanAlgebra)(f : Hom A B) (g : Hom B C) (h : Hom C D): h o (g o f) = (h o g) o f. *)
 
 Lemma and_pq_r (B : BooleanAlgebra) (p q r : B) :
   (p | q) & r = p & r | q & r.
