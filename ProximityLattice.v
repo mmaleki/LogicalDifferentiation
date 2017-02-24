@@ -148,13 +148,14 @@ Proof.
       }
 Admitted.
 
-(*
+
 Inductive Colors := White | Black.
 
+(*
 Definition color_and (b1 : Colors) (b2 : Colors) : Colors := 
-  match b1 with 
-  | White => White 
-  | Black => b2
+  match b1  with 
+  | White , White => White 
+  | Black , White => Black
   end.
 
 Definition color_or (b1 : Colors) (b2 : Colors) : Colors := 
@@ -183,10 +184,10 @@ Proof.
             lt_or := orb;
             lt_zero := false;
             lt_one := true|}; repeat (intros [|]); reflexivity.
-Qed.
+Defined.
 
 
-(*Definition Two_hom(b1 b2 : bool): Prop :=
+(*Definition Two_hom(b1 b2 : Two_Lattice): Prop :=
   match b1, b2 with
     | true , true => True
     | true , false => False
@@ -198,13 +199,28 @@ Qed.
 Lemma Ttt: Two_hom true true =True.
 Proof.
 reflexivity.
-Qed.*)
+Qed.
+*)
+
+Inductive Two_mor : Two_Lattice -> Two_Lattice -> Prop :=
+   |b_0_1 : Two_mor false true
+   |b_0_0 : Two_mor false false
+   |b_1_1 : Two_mor true true.
+   
 
 Definition Two_Proximity : ProximityLattice.
 Proof.
-   refine{| plt_lattice := Two_Lattice ; plt_approx := fun x y => x= x ||y |}; repeat (intros [|]).
-  Admitted.
+   refine{| plt_lattice := Two_Lattice ; plt_approx := Two_mor|}.
+intros.
+simpl in *.
+destruct x, y, z.
+Admitted.
 
+(*reflexivity.
+
+destruct x, y, z; simpl in *; try reflexivity; discriminate.
+cbn.
+Admitted.*)
 
 
 
