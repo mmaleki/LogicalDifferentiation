@@ -8,15 +8,26 @@ Structure Lattice :={
   lt_one : lt_carrier;
   lt_and_commute : forall x y, lt_and x y = lt_and y x;
   lt_or_commute : forall x y, lt_or x y = lt_or y x;
-  lt_and_associcate : forall x y z, lt_and x (lt_and y z) = lt_and (lt_and x y) z;
+  lt_and_associate : forall x y z, lt_and x (lt_and y z) = lt_and (lt_and x y) z;
   lt_or_associate : forall x y z, lt_or x (lt_or y z) = lt_or (lt_or x y) z;
-  lt_or_absorb : forall x y, lt_or x (lt_and x y)=x;
-  lt_and_absorb : forall x y, lt_and x (lt_or x y)=x;
+  lt_or_absorb : forall x y, lt_or x (lt_and x y) = x;
+  lt_and_absorb : forall x y, lt_and x (lt_or x y) = x;
   lt_zero_identity_r : forall x, lt_or x lt_zero = x;
   lt_one_identity_r : forall x, lt_and x lt_one = x;
   lt_distribute_or : forall x y z, lt_or x (lt_and y z) = lt_and (lt_or x y) (lt_or x z);
   lt_distribute_and : forall x y z, lt_and x (lt_or y z) = lt_or (lt_and x y) (lt_and x z)
 }.
+
+Hint Resolve lt_and_commute : lt_hints.
+Hint Resolve lt_or_commute : lt_hints.
+Hint Resolve lt_and_associate : lt_hints.
+Hint Resolve lt_or_associate : lt_hints.
+Hint Resolve lt_or_absorb : lt_hints.
+Hint Resolve lt_and_absorb : lt_hints.
+Hint Resolve lt_zero_identity_r : lt_hints.
+Hint Resolve lt_one_identity_r : lt_hints.
+Hint Resolve lt_distribute_or : lt_hints.
+Hint Resolve lt_distribute_and : lt_hints.
 
 Notation "p && q" := (lt_and _ p q) (at level 40, left associativity).
 Notation "p || q" := (lt_or _ p q) (at level 50, left associativity).
@@ -72,17 +83,35 @@ Structure ProximityLattice :=
     plt_approx_or_interpolate :
       forall x y z , plt_approx x (y || z) -> (exists y' z', plt_approx y' y /\ plt_approx z' z /\ plt_approx x (y' || z'));
     plt_approx_and : forall x y z , plt_approx x y /\ plt_approx x z <-> plt_approx x (y && z);
-    plt_approx_one : forall x , x <> 1 -> plt_approx x 1;
+    plt_approx_one : forall x , plt_approx x 1;
     plt_interpolate : forall x y, plt_approx x y -> (exists z, plt_approx x z /\ plt_approx z y)
   }.
 
 Notation "x << y" := (plt_approx _ x y)(at level 70, no associativity).
 
-Lemma or_approx_monotone_r (A : ProximityLattice) (x y1 y2 : A) :
-  y1 << y2 -> x || y1 << x || y2.
+Lemma plt_approx_or_l (A : ProximityLattice) (x y z : A) :
+  (x || y) << z -> x << z.
 Proof.
-Admitted.
+  apply plt_approx_or.
+Defined.
 
+Lemma plt_approx_or_r (A : ProximityLattice) (x y z : A) :
+  (x || y) << z -> y << z.
+Proof.
+  apply plt_approx_or.
+Defined.
+
+Lemma plt_approx_and_l (A : ProximityLattice) (x y z : A) :
+  z << x && y -> z << x.
+Proof.
+  apply plt_approx_and.
+Defined.
+
+Lemma plt_approx_and_r (A : ProximityLattice) (x y z : A) :
+  z << x && y -> z << y.
+Proof.
+  apply plt_approx_and.
+Defined.
 
 
 Section FiniteJoins.
@@ -135,7 +164,7 @@ Proof.
         - simpl.
           apply (plt_trans _ x (u || v)).
           + assumption.
-          + now apply or_approx_monotone_r.
+          + admit.
         - intros z ?.
           destruct H5.
           + exists a. split.
@@ -149,9 +178,8 @@ Proof.
 Admitted.
 
 
-Inductive Colors := White | Black.
-
 (*
+Inductive Colors := White | Black.
 Definition color_and (b1 : Colors) (b2 : Colors) : Colors := 
   match b1  with 
   | White , White => White 
@@ -171,12 +199,12 @@ Proof.
             lt_or := fun x y => color_or x y;
             lt_zero := White;
             lt_one := Black
-|}. 
+|}.
 intros.
 apply lt_and_commute.
 *)
 
-Definition Two_Lattice : Lattice.
+Definition TwoLattice : Lattice.
 Proof.
   (* We use bool and its operations from the standard library *)
   refine {| lt_carrier := bool ;
@@ -202,26 +230,100 @@ reflexivity.
 Qed.
 *)
 
-Inductive Two_mor : Two_Lattice -> Two_Lattice -> Prop :=
-   |b_0_1 : Two_mor false true
-   |b_0_0 : Two_mor false false
-   |b_1_1 : Two_mor true true.
-   
+(*Definition Two_approx (a : TwoLattice) (b : TwoLattice) :=
+  match a with
+    | false => True
+    | true => False
+  end.
+*)
+
+Definition Two_approx(b1 b2 : TwoLattice): Prop :=
+  match b1, b2 with
+    | true , true => True
+    | true , false => False
+    | false , true => True
+    | false , false => True
+  end.
+
 
 Definition Two_Proximity : ProximityLattice.
 Proof.
-   refine{| plt_lattice := Two_Lattice ; plt_approx := Two_mor|}.
-intros.
-simpl in *.
-destruct x, y, z.
+   refine {| plt_lattice := TwoLattice ;
+             plt_approx := Two_approx
+          |}.
+   - repeat intros [|] ; simpl ; tauto.
+   - repeat intros [|] ; simpl ; tauto.
+   - repeat intros [|] ; simpl ;
+       tauto || (intros _ ; 
+                 ((exists false ; 
+                          ((exists false ; simpl ; tauto) || (exists true ; simpl ; tauto))
+                  ) ||
+                  (exists true ;
+                          ((exists false ; simpl ; tauto) || (exists true ; simpl ; tauto))
+                ))).
+   - repeat intros [|] ; simpl ; tauto.
+   - repeat intros [|] ; simpl ; tauto.
+   - repeat intros [|] ; simpl ;
+       (tauto || (intros _ ; ((exists false ; simpl ; tauto) || (exists true ; simpl ; tauto)))).
+Defined.
+
+Lemma pair_equal (A B : Type) (x1 x2 : A) (y1 y2 : B) :
+  x1 = x2 -> y1 = y2 -> (x1, y1) = (x2, y2).
+Proof.
+  intros [] [] ; reflexivity.
+Defined.
+
+Definition LatticeProduct (A B : Lattice) : Lattice.
+Proof.
+  refine {| lt_carrier := A * B ;
+            lt_or := (fun x y => (fst x || fst y, snd x || snd y)) ;
+            lt_and := (fun x y => (fst x && fst y, snd x && snd y)) ;
+            lt_zero := (0, 0) ;
+            lt_one := (1, 1)
+         |} ;
+  repeat intros [? ?] ; simpl ; apply pair_equal ;
+    auto with lt_hints.
+Defined.
+
+Definition ProximityProduct (A B : ProximityLattice) : ProximityLattice.
+Proof.
+  refine {|  plt_lattice := LatticeProduct A B ;
+             plt_approx := (fun x y => (fst x << fst y) /\ (snd x << snd y))
+         |}.
+  - intros [x1 y1] [x2 y2] [x3 y3] [H1 H2] [H3 H4]; simpl in * ; split.
+    + eapply plt_trans ; eassumption.
+    + eapply plt_trans ; eassumption.
+  - repeat intros [? ?] ; simpl in * ; split.
+    + intros [[? ?] [? ?]]. split.
+      * apply plt_approx_or ; tauto.
+      * apply plt_approx_or ; tauto.
+    + intros [? ?]. repeat split.
+      * eapply plt_approx_or_r.
+        rewrite lt_or_commute.
+        eassumption.
+      * eapply plt_approx_or_r.
+        rewrite lt_or_commute.
+        eassumption.
+      * eapply plt_approx_or_l.
+        rewrite lt_or_commute.
+        eassumption.
+      * eapply plt_approx_or_l.
+        rewrite lt_or_commute.
+        eassumption.
+  - intros [x1 y1] [x2 y2] [x3 y3] [H1 H2] ; simpl in *.
+    destruct (plt_approx_or_interpolate _ x1 x2 x3 H1) as [x2' [x3' [? [? ?]]]].
+    destruct (plt_approx_or_interpolate _ _ _ _ H2) as [y2' [y3' [? [? ?]]]].
+    exists (x2', y2').
+    exists (x3', y3').
+    tauto.
+  - intros [x1 y1] [x2 y2] [x3 y3] ; simpl in *.
+    split.
+    + intros [[? ?] [? ?]] ; split.
+      * now apply plt_approx_and.
+      * now apply plt_approx_and.
+    + intros [? ?] ; repeat split ; eauto using plt_approx_and_l, plt_approx_and_r.
+    - admit. (* intros [x1 y1] H ; simpl in * ; split.*)
+    - admit. (* XXX we have a real mathematical problem here (not just Coq). *)
+  
 Admitted.
-
-(*reflexivity.
-
-destruct x, y, z; simpl in *; try reflexivity; discriminate.
-cbn.
-Admitted.*)
-
-
-
 
