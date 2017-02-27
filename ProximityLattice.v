@@ -94,6 +94,7 @@ Lemma plt_approx_or_l (A : ProximityLattice) (x y z : A) :
 Proof.
   apply plt_approx_or.
 Defined.
+<<<<<<< HEAD
 
 Lemma plt_approx_or_r (A : ProximityLattice) (x y z : A) :
   (x || y) << z -> y << z.
@@ -107,6 +108,21 @@ Proof.
   apply plt_approx_and.
 Defined.
 
+=======
+
+Lemma plt_approx_or_r (A : ProximityLattice) (x y z : A) :
+  (x || y) << z -> y << z.
+Proof.
+  apply plt_approx_or.
+Defined.
+
+Lemma plt_approx_and_l (A : ProximityLattice) (x y z : A) :
+  z << x && y -> z << x.
+Proof.
+  apply plt_approx_and.
+Defined.
+
+>>>>>>> origin/master
 Lemma plt_approx_and_r (A : ProximityLattice) (x y z : A) :
   z << x && y -> z << y.
 Proof.
@@ -230,11 +246,16 @@ reflexivity.
 Qed.
 *)
 
+<<<<<<< HEAD
 (*Definition Two_approx (a : TwoLattice) (b : TwoLattice) :=
+=======
+Definition Two_approx (a : TwoLattice) (b : TwoLattice) :=
+>>>>>>> origin/master
   match a with
     | false => True
     | true => False
   end.
+<<<<<<< HEAD
 *)
 
 Definition Two_approx(b1 b2 : TwoLattice): Prop :=
@@ -244,6 +265,90 @@ Definition Two_approx(b1 b2 : TwoLattice): Prop :=
     | false , true => True
     | false , false => True
   end.
+=======
+
+Definition Two_Proximity : ProximityLattice.
+Proof.
+   refine {| plt_lattice := TwoLattice ;
+             plt_approx := Two_approx
+          |}.
+   - repeat intros [|] ; simpl ; tauto.
+   - repeat intros [|] ; simpl ; tauto.
+   - repeat intros [|] ; simpl ;
+       tauto || (intros _ ; 
+                 ((exists false ; 
+                          ((exists false ; simpl ; tauto) || (exists true ; simpl ; tauto))
+                  ) ||
+                  (exists true ;
+                          ((exists false ; simpl ; tauto) || (exists true ; simpl ; tauto))
+                ))).
+   - repeat intros [|] ; simpl ; tauto.
+   - repeat intros [|] ; simpl ; tauto.
+   - repeat intros [|] ; simpl ;
+       (tauto || (intros _ ; ((exists false ; simpl ; tauto) || (exists true ; simpl ; tauto)))).
+Defined.
+
+Lemma pair_equal (A B : Type) (x1 x2 : A) (y1 y2 : B) :
+  x1 = x2 -> y1 = y2 -> (x1, y1) = (x2, y2).
+Proof.
+  intros [] [] ; reflexivity.
+Defined.
+
+Definition LatticeProduct (A B : Lattice) : Lattice.
+Proof.
+  refine {| lt_carrier := A * B ;
+            lt_or := (fun x y => (fst x || fst y, snd x || snd y)) ;
+            lt_and := (fun x y => (fst x && fst y, snd x && snd y)) ;
+            lt_zero := (0, 0) ;
+            lt_one := (1, 1)
+         |} ;
+  repeat intros [? ?] ; simpl ; apply pair_equal ;
+    auto with lt_hints.
+Defined.
+
+Definition ProximityProduct (A B : ProximityLattice) : ProximityLattice.
+Proof.
+  refine {|  plt_lattice := LatticeProduct A B ;
+             plt_approx := (fun x y => (fst x << fst y) /\ (snd x << snd y))
+         |}.
+  - intros [x1 y1] [x2 y2] [x3 y3] [H1 H2] [H3 H4]; simpl in * ; split.
+    + eapply plt_trans ; eassumption.
+    + eapply plt_trans ; eassumption.
+  - repeat intros [? ?] ; simpl in * ; split.
+    + intros [[? ?] [? ?]]. split.
+      * apply plt_approx_or ; tauto.
+      * apply plt_approx_or ; tauto.
+    + intros [? ?]. repeat split.
+      * eapply plt_approx_or_r.
+        rewrite lt_or_commute.
+        eassumption.
+      * eapply plt_approx_or_r.
+        rewrite lt_or_commute.
+        eassumption.
+      * eapply plt_approx_or_l.
+        rewrite lt_or_commute.
+        eassumption.
+      * eapply plt_approx_or_l.
+        rewrite lt_or_commute.
+        eassumption.
+  - intros [x1 y1] [x2 y2] [x3 y3] [H1 H2] ; simpl in *.
+    destruct (plt_approx_or_interpolate _ x1 x2 x3 H1) as [x2' [x3' [? [? ?]]]].
+    destruct (plt_approx_or_interpolate _ _ _ _ H2) as [y2' [y3' [? [? ?]]]].
+    exists (x2', y2').
+    exists (x3', y3').
+    tauto.
+  - intros [x1 y1] [x2 y2] [x3 y3] ; simpl in *.
+    split.
+    + intros [[? ?] [? ?]] ; split.
+      * now apply plt_approx_and.
+      * now apply plt_approx_and.
+    + intros [? ?] ; repeat split ; eauto using plt_approx_and_l, plt_approx_and_r.
+  - intros [x1 y1] H ; simpl in * ; split.
+    * admit. (* XXX we have a real mathematical problem here (not just Coq). *)
+    * admit.
+  - admit.
+Admitted.
+>>>>>>> origin/master
 
 
 Definition Two_Proximity : ProximityLattice.
