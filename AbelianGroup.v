@@ -35,10 +35,25 @@ Proof.
    apply g_inverse_axiom.
 Defined.
 
+Structure GroupHom (A B : Group):={
+g_hom : A ->B;
+g_hom_dist : forall x y, g_hom (x * y) = (g_hom x) * (g_hom y);
+g_hom_idn : g_hom e = e;
+g_hom_inv : forall x, g_hom (! x) = ! (g_hom x)
+}.
+
+Definition id_hom (A:Group): GroupHom A A.
+Proof.
+   refine{|g_hom := fun x => x|}.
+   reflexivity. reflexivity. reflexivity.
+Defined.
+
+
+
+
 Lemma plt_approx_or_r: forall(G : Group ) ( x y z : G), x * z = y * z -> x = y.
 Proof.
-  intros.
-  rewrite -> g_product.
+  Admitted.
 
 
 

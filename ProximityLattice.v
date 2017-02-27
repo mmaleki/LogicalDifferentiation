@@ -94,7 +94,7 @@ Lemma plt_approx_or_l (A : ProximityLattice) (x y z : A) :
 Proof.
   apply plt_approx_or.
 Defined.
-<<<<<<< HEAD
+
 
 Lemma plt_approx_or_r (A : ProximityLattice) (x y z : A) :
   (x || y) << z -> y << z.
@@ -108,21 +108,8 @@ Proof.
   apply plt_approx_and.
 Defined.
 
-=======
 
-Lemma plt_approx_or_r (A : ProximityLattice) (x y z : A) :
-  (x || y) << z -> y << z.
-Proof.
-  apply plt_approx_or.
-Defined.
 
-Lemma plt_approx_and_l (A : ProximityLattice) (x y z : A) :
-  z << x && y -> z << x.
-Proof.
-  apply plt_approx_and.
-Defined.
-
->>>>>>> origin/master
 Lemma plt_approx_and_r (A : ProximityLattice) (x y z : A) :
   z << x && y -> z << y.
 Proof.
@@ -246,7 +233,6 @@ reflexivity.
 Qed.
 *)
 
-<<<<<<< HEAD
 (*Definition Two_approx (a : TwoLattice) (b : TwoLattice) :=
 =======
 Definition Two_approx (a : TwoLattice) (b : TwoLattice) :=
@@ -265,7 +251,7 @@ Definition Two_approx(b1 b2 : TwoLattice): Prop :=
     | false , true => True
     | false , false => True
   end.
-=======
+
 
 Definition Two_Proximity : ProximityLattice.
 Proof.
@@ -343,14 +329,14 @@ Proof.
       * now apply plt_approx_and.
       * now apply plt_approx_and.
     + intros [? ?] ; repeat split ; eauto using plt_approx_and_l, plt_approx_and_r.
-  - intros [x1 y1] H ; simpl in * ; split.
+  (* intros [x1 y1] H ; simpl in * ; split.
     * admit. (* XXX we have a real mathematical problem here (not just Coq). *)
     * admit.
-  - admit.
+  - admit.*)
 Admitted.
->>>>>>> origin/master
 
 
+(*
 Definition Two_Proximity : ProximityLattice.
 Proof.
    refine {| plt_lattice := TwoLattice ;
@@ -431,4 +417,4 @@ Proof.
     - admit. (* XXX we have a real mathematical problem here (not just Coq). *)
   
 Admitted.
-
+*)
