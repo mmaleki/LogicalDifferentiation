@@ -1,4 +1,5 @@
 Require Import List.
+Require Import QArith.
 
 Structure Lattice :={
   lt_carrier :> Type;
@@ -334,6 +335,24 @@ Proof.
     * admit.
   - admit.*)
 Admitted.
+
+
+
+Definition I(p q : Q):= {x : Q|p < x /\ x < q}.
+
+Check I.
+Definition lt_interval:=forall p q :Q, I p q.
+
+Definition interval_lattice: Lattice.
+Proof.
+  refine{|lt_carrier:=lt_interval, lt_and:=fun |}.
+
+
+
+
+Definition interval_join (p q r s
+  
+
 
 
 (*
