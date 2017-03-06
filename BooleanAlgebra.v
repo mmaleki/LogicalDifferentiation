@@ -71,7 +71,6 @@ Proof.
   reflexivity.
 Qed.
 
-<<<<<<< HEAD
 Lemma Hom_1 (A B : BooleanAlgebra) (f: Hom A B):
  f 1 = 1.
 Proof.
@@ -79,11 +78,6 @@ Admitted.
 
 Lemma id_comp(A B : BooleanAlgebra)(f : Hom A B) : (id B) o f = f.
 Lemma assos_o (A B C D : BooleanAlgebra)(f : Hom A B) (g : Hom B C) (h : Hom C D): h o (g o f) = (h o g) o f. 
-=======
-(* Lemma id_comp(A B : BooleanAlgebra)(f : Hom A B) : (id B) o f = f. *)
-
-(* Lemma assos_o (A B C D : BooleanAlgebra)(f : Hom A B) (g : Hom B C) (h : Hom C D): h o (g o f) = (h o g) o f. *)
->>>>>>> origin/master
 
 Lemma and_pq_r (B : BooleanAlgebra) (p q r : B) :
   (p | q) & r = p & r | q & r.
