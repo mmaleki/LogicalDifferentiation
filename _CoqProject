@@ -1,6 +1,11 @@
--R . Top
-Poset.v
-Lattice.v
-ProximityLattice.v
-IntervalLattice.v
+-R . ""
+
 BooleanAlgebra.v
+
+Poset.v
+
+Lattice.v
+
+ProximityLattice.v
+
+IntervalLattice.v

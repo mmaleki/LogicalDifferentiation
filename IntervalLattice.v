@@ -2,7 +2,7 @@
 Require Import QArith.
 Require Import QArith.Qminmax.
 
-Load ProximityLattice.
+Require Import ProximityLattice.
 
 Definition I(p q : Q):= {x : Q | p < x /\ x < q}.
 Check I.
