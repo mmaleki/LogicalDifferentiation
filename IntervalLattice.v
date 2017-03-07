@@ -2,7 +2,11 @@
 Require Import QArith.
 Require Import QArith.Qminmax.
 
+Require Import Lattice.
 Require Import ProximityLattice.
+
+
+
 
 Definition I(p q : Q):= {x : Q | p < x /\ x < q}.
 Check I.
@@ -119,6 +123,22 @@ Definition rat_approx (i j : rat) :=
   | RatTop => False
   end.
 
+Check plt_trans.
+
+Lemma trans:forall p q r :Q,p < q /\ q < r -> p < r.
+Proof.
+intros.
+destruct H.
+apply (Qlt_le_trans p q r).
+apply H.
+apply Qlt_le_weak.
+apply H0.
+Defined.
+
+Check plt_interpolate.
+
+
+
 Definition interval_proximity_lattice : ProximityLattice.
 Proof.
   refine {|
@@ -126,10 +146,12 @@ Proof.
       plt_approx := rat_approx
     |}.
   - { intros i j k H1 H2.
-      destruct i ; destruct j ; destruct k ; auto.
+      destruct i as [_ | p q H | _]; destruct j as [_ | p' q' H'| _]
+      ; destruct k as [_ | p'' q'' H''| _] ; auto.
       - elim H1.
       - simpl in H1; simpl in H2. simpl. 
-         destruct H1. destruct H2.  auto. admit. (* exercise *)
+         destruct H1. destruct H2. split. eapply trans. split.
+         apply H2. apply H0. eapply trans. split. apply H1. apply H3.  (* exercise *)
       - elim H2.
     }
   - apply cheating.
@@ -140,14 +162,13 @@ Proof.
     }
   - { 
       intros i j H.
-      destruct i, j.
+      destruct i, j. simpl. simpl in *. admit. 
       - admit.
       - admit.
       - admit.
-      - elim H.
+      - elim H. admit.
       - admit.
       - admit.
-      - elim H.
       - elim H.
       - elim H.
     }
