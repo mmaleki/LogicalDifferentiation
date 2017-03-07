@@ -1,5 +1,4 @@
 (* Definition and basic facts about distributive lattices. *)
-
 Structure Lattice :={
   lt_carrier :> Type;
   lt_and : lt_carrier -> lt_carrier -> lt_carrier;

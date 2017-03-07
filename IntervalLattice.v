@@ -2,8 +2,7 @@
 Require Import QArith.
 Require Import QArith.Qminmax.
 
-Require Import Lattice.
-Require Import ProximityLattice.
+Load ProximityLattice.
 
 Definition I(p q : Q):= {x : Q | p < x /\ x < q}.
 Check I.
@@ -16,6 +15,7 @@ Inductive rat : Type :=
   | RatBottom : rat
   | RatProper : forall (p q : Q), (p < q) -> rat
   | RatTop : rat.
+
 
 Definition rat_and (i j : rat) : rat.
 Proof.
@@ -40,7 +40,20 @@ Proof.
 Defined.
 
 Definition rat_or (i j : rat) : rat.
-Admitted.
+Proof.
+  destruct i as [ | p q H | ].
+  - exact j.
+  - destruct j as [_ | p' q' H' | _].
+    + exact (RatProper p q H).
+    +{ pose (p'' := Qmin p p' ).
+       pose (q'' := Qmax q q' ).
+       destruct (Qlt_le_dec p'' q'') as [H1 | H2].
+         -exact (RatProper p'' q'' H1).
+         -exact RatBottom.
+       }
+    + exact (RatTop).
+  - exact (RatTop).
+Defined.
 
 (* We will cheat. WARNING WARNING WE ARE ASSUMING AN INCONSISTENCY. *)
 Axiom cheating : forall (A : Type), A.
@@ -55,8 +68,13 @@ Proof.
       lt_one := RatTop
   |}.
   - {
+     (*intros i j. 
+      destruct i as [_ | p q H | _].
+      destruct j as [_ | p' q' H'| _].
+      auto.
+      apply cheating.*)
       intros i j.
-      destruct i; destruct j ; auto.
+      destruct i ; destruct j ; auto.
       rename q0 into H1.
       rename q2 into H2.
       rename p0 into p'.
@@ -110,7 +128,8 @@ Proof.
   - { intros i j k H1 H2.
       destruct i ; destruct j ; destruct k ; auto.
       - elim H1.
-      - simpl in H1; simpl in H2. admit. (* exercise *)
+      - simpl in H1; simpl in H2. simpl. 
+         destruct H1. destruct H2.  auto. admit. (* exercise *)
       - elim H2.
     }
   - apply cheating.

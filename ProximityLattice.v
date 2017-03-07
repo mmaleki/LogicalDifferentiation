@@ -1,5 +1,5 @@
 Require Import List.
-Require Import Lattice.
+Load Lattice.
 
 Structure ProximityLattice :=
   {
