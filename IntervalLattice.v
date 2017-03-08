@@ -59,6 +59,7 @@ Proof.
   - exact (RatTop).
 Defined.
 
+
 (* We will cheat. WARNING WARNING WE ARE ASSUMING AN INCONSISTENCY. *)
 Axiom cheating : forall (A : Type), A.
 
@@ -136,7 +137,14 @@ apply H0.
 Defined.
 
 Check plt_interpolate.
+Check  Qplus_lt_l.
 
+Lemma mean_value_l: forall x y, x<y -> (x+y)/(2#1) < y.
+Proof.
+   Admitted. 
+Lemma mean_value_r: forall x y, x<y -> (x+y)/(2#1) > x.
+Proof.
+   Admitted.
 
 
 Definition interval_proximity_lattice : ProximityLattice.
@@ -162,14 +170,20 @@ Proof.
     }
   - { 
       intros i j H.
-      destruct i, j. simpl. simpl in *. admit. 
-      - admit.
-      - admit.
-      - admit.
-      - elim H. admit.
-      - admit.
-      - admit.
+      destruct i, j. simpl. simpl in *. exists RatBottom. split. trivial. trivial.
+      - exists RatBottom. simpl. split;trivial.
+      - exists RatBottom. simpl. split; trivial.
+      - elim H.
+      - rename q0 into G, p0 into p', q1 into q', q2 into G'. pose (p'':=(p+p')/(2#1)). 
+        pose (q'':=(q+q')/(2#1)). destruct (Qlt_le_dec p'' q'') as [G1|G2].
+           exists (RatProper p'' q'' G1). split. simpl. split. admit. admit. admit. admit.
+      - pose(p':= p-1). pose (q':=q+1). destruct (Qlt_le_dec p' q') as [K1|K2]. simpl. admit. admit.
       - elim H.
       - elim H.
-    }
+      - elim H.
 Admitted.
+
+
+
+
+
