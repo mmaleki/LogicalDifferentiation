@@ -27,8 +27,19 @@ Proof.
   apply Rlt_le, op_proper.
 Defined.
 
+
+Definition interior : ClosedInterval -> OpenInterval.
+Proof.
+  intro a.
+  refine {| op_lower := cl_lower a ; op_upper := cl_upper a |}.
+Admitted.
+
 Definition inside (a : ClosedInterval) (b : OpenInterval) :=
   op_lower b < cl_lower a /\ cl_upper a < op_upper b.
+
+Definition inside_open (a :OpenInterval ) (b : ClosedInterval) :=
+  cl_lower b <= op_lower a /\ op_upper a <= cl_upper b.
+
 
 Definition well_inside (a b : OpenInterval) :=
   op_lower b < op_lower a /\ op_upper a < op_upper b.
@@ -81,6 +92,10 @@ Structure bowtie (a : OpenInterval) (b : ClosedInterval) := {
 Definition Approx (f : R -> R) (a O : OpenInterval) :=
   forall x, cl_in x (closure a) -> op_in (f x) O.
 
+Definition delta (a : OpenInterval) (b : ClosedInterval) (map : R -> R) :=
+   forall x y : R, op_in x a -> op_in y a ->
+                cl_in (map x - map y) (scalar_mul (x - y) b).
+
 Definition Delta (a O : OpenInterval) (A : OpenInterval -> OpenInterval -> Prop) :=
   forall a1 a2,
     well_inside a1 a ->
@@ -89,11 +104,35 @@ Definition Delta (a O : OpenInterval) (A : OpenInterval -> OpenInterval -> Prop)
     exists a1' a2',
       A a1 a1' /\ A a2 a2' /\
       well_inside (op_subtract a1' a2') (op_multiply O (op_subtract a1 a2)).
-  
-Theorem main_theorem (a : OpenInterval) (b : ClosedInterval) (f : bowtie a b) :
-  forall O : OpenInterval, inside b O -> Delta a O (Approx f).
+
+
+Structure Bowtie (a O: OpenInterval)  := {
+  Bow_map :>  OpenInterval ->  OpenInterval -> Prop ;
+  Bow_lipschitz :
+    forall a1 a2,
+    well_inside a1 a ->
+    well_inside a2 a ->
+    separated a1 a2 ->
+    exists a1' a2',
+      Bow_map a1 a1' /\ Bow_map a2 a2' /\
+      well_inside (op_subtract a1' a2') (op_multiply O (op_subtract a1 a2))
+}.
+
+Definition dual_fun (A:OpenInterval ->  OpenInterval -> Prop) (x : R) :=
+  x.
+
+Check dual_fun.
+
+
+Theorem main_theorem1 (a O : OpenInterval)(A :Bowtie a O): delta  a (closure O)(dual_fun A).
 Proof.
-  intros [O1 O2 Proper_O] [Inside_bO] [c1 c2 Proper_c] [d1 d2 Proper_d] [WI_ca1 WI_ca2] [WI_da1 WI_da2] Separated_cd.
+Admitted.
+
+Theorem main_theorem2 (a : OpenInterval) (b : ClosedInterval) (f : bowtie a b) :
+  forall O : OpenInterval, inside b O ->
+  forall a0 :OpenInterval, inside (closure a0) a  -> Delta a0 O (Approx f).
+Proof.
+  intros. (*[O1 O2 Proper_O] [Inside_bO] [c1 c2 Proper_c] [d1 d2 Proper_d] [WI_ca1 WI_ca2] [WI_da1 WI_da2] Separated_cd.*)
   destruct a as [a1 a2 Proper_a].
   destruct b as [b1 b2 Proper_b].
   destruct f as [f Lipschitz_f].
@@ -104,3 +143,31 @@ Proof.
   simpl in *.
   admit.
 Admitted.
+
+Definition strong_delta (a : OpenInterval) (b : ClosedInterval) (map : R -> R) :=
+   exists a' , well_inside a a' ->
+   exists b' , inside_open (interior b') b ->
+   forall x y : R, op_in x a' -> op_in y a' ->
+                cl_in (map x - map y) (scalar_mul (x - y) b').
+
+Definition StrongDelta (a O : OpenInterval) (A : OpenInterval -> OpenInterval -> Prop) :=
+   exists a', well_inside a a' -> 
+   exists O', well_inside O' O ->
+   forall a1 a2,
+    well_inside a1 a' ->
+    well_inside a2 a' ->
+    separated a1 a2 ->
+    exists a1' a2',
+      A a1 a1' /\ A a2 a2' /\
+      well_inside (op_subtract a1' a2') (op_multiply O' (op_subtract a1 a2)).
+
+Theorem strong_main_theorem1 (a O : OpenInterval)(A :Bowtie a O): exists b, inside b O /\ strong_delta  a b(dual_fun A).
+
+Theorem strong_main_theorem2 (a : OpenInterval) (b : ClosedInterval) (f : bowtie a b) :
+  forall O : OpenInterval, inside b O ->
+  StrongDelta a O (Approx f).
+Proof.
+Admitted.
+
+
+
