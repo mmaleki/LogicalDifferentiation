@@ -5,3 +5,5 @@
 makefile
 Makefile
 /Makefile.bak
+/.lia.cache
+/.nra.cache
