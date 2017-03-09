@@ -1,7 +1,9 @@
-Require Import QArith.
-Require Import QArith.Qreals.
+(*Require Import QArith.
+Require Import QArith.Qreals.*)
 Require Import Reals.
 Require Import Psatz.
+Require Import QArith.Qminmax.
+Require Lra.
 
 Local Open Scope R_scope.
 
@@ -121,12 +123,51 @@ Structure Bowtie (a O: OpenInterval)  := {
 Definition dual_fun (A:OpenInterval ->  OpenInterval -> Prop) (x : R) :=
   x.
 
-Check dual_fun.
 
 
-Theorem main_theorem1 (a O : OpenInterval)(A :Bowtie a O): delta  a (closure O)(dual_fun A).
+
+Theorem main_theorem1 (a O : OpenInterval)(A :Bowtie a O):
+        delta  a (closure O)(dual_fun A).
 Proof.
 Admitted.
+
+
+Definition interpol (a : ClosedInterval) (b : OpenInterval) :
+  inside a b -> exists b' : OpenInterval, inside a b' /\ well_inside b' b.
+Proof. 
+   intros. destruct a, b. rename cl_lower0 into a1, cl_upper0 into a2,
+    cl_proper0 into a_prop,op_lower0 into b1, op_upper0 into b2,
+    op_proper0 into b_prop.
+    pose (c1 := (a1+b1)*(1/2)).
+    pose (c2 := (a2+b2)*(1/2)).
+    assert (C : c1 < c2).
+     {unfold c1, c2. lra . }
+    exists {| op_lower := c1; op_upper := c2; op_proper := C |}.
+    split.
+     -unfold inside in *. 
+       unfold op_lower in *. 
+       unfold cl_lower in *.
+       unfold cl_upper in *.
+       unfold op_upper in *.
+       split.
+       assert (G' : c1 < a1).
+        { unfold c1; simpl. lra. }
+       lra.
+       assert (G'' : a2 < c2).
+        { unfold c2; simpl. lra. }
+       lra.
+     - unfold well_inside in *.
+        unfold op_lower in *. 
+        unfold cl_lower in *.
+        unfold cl_upper in *.
+        unfold op_upper in *.
+        split.
+          +assert (K' : b1 < c1).
+            {unfold c1 ;simpl. } admit.  
+           +assert (K'' : c2 < b2).
+            {unfold c2 ;simpl. } admit.
+Admitted.
+
 
 Theorem main_theorem2 (a : OpenInterval) (b : ClosedInterval) (f : bowtie a b) :
   forall O : OpenInterval, inside b O ->
@@ -140,7 +181,7 @@ Proof.
   unfold Delta, Approx.
   unfold separated, well_inside in *.
   unfold cl_in, op_in.
-  simpl in *.
+  simpl in *. intros. intros.
   admit.
 Admitted.
 
@@ -161,11 +202,12 @@ Definition StrongDelta (a O : OpenInterval) (A : OpenInterval -> OpenInterval ->
       A a1 a1' /\ A a2 a2' /\
       well_inside (op_subtract a1' a2') (op_multiply O' (op_subtract a1 a2)).
 
-Theorem strong_main_theorem1 (a O : OpenInterval)(A :Bowtie a O): exists b, inside b O /\ strong_delta  a b(dual_fun A).
+Theorem strong_main_theorem1 (a O : OpenInterval)(A :Bowtie a O):
+        exists b, inside b O /\ strong_delta  a b(dual_fun A).
 
 Theorem strong_main_theorem2 (a : OpenInterval) (b : ClosedInterval) (f : bowtie a b) :
-  forall O : OpenInterval, inside b O ->
-  StrongDelta a O (Approx f).
+        forall O : OpenInterval, inside b O ->
+        StrongDelta a O (Approx f).
 Proof.
 Admitted.
 
