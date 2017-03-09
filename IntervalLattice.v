@@ -1,15 +1,12 @@
 (* Require Setoid. *)
 Require Import QArith.
 Require Import QArith.Qminmax.
+Require Import Psatz.
+Require Import Lqa.
 
 Require Import Lattice.
 Require Import ProximityLattice.
 
-
-
-
-Definition I(p q : Q):= {x : Q | p < x /\ x < q}.
-Check I.
 
 (* The definition of a rational interval, actually, the data
    which determines it: lower bound, upper bound, proof that
@@ -49,12 +46,13 @@ Proof.
   - exact j.
   - destruct j as [_ | p' q' H' | _].
     + exact (RatProper p q H).
-    +{ pose (p'' := Qmin p p' ).
+    + { pose (p'' := Qmin p p' ).
        pose (q'' := Qmax q q' ).
        destruct (Qlt_le_dec p'' q'') as [H1 | H2].
          -exact (RatProper p'' q'' H1).
          -exact RatBottom.
-       }
+
+      }
     + exact (RatTop).
   - exact (RatTop).
 Defined.
@@ -124,7 +122,7 @@ Definition rat_approx (i j : rat) :=
   | RatTop => False
   end.
 
-Check plt_trans.
+(* Check plt_trans. *)
 
 Lemma trans:forall p q r :Q,p < q /\ q < r -> p < r.
 Proof.
@@ -136,16 +134,20 @@ apply Qlt_le_weak.
 apply H0.
 Defined.
 
-Check plt_interpolate.
-Check  Qplus_lt_l.
+(* Check plt_interpolate. *)
+(* Check  Qplus_lt_l. *)
 
-Lemma mean_value_l: forall x y, x<y -> (x+y)/(2#1) < y.
+Lemma mean_value_l: forall x y, x < y -> ((y + x) * (1#2))%Q < y.
 Proof.
-   Admitted. 
-Lemma mean_value_r: forall x y, x<y -> (x+y)/(2#1) > x.
-Proof.
-   Admitted.
+  intros.
+  lra.
+Qed.
 
+Lemma mean_value_r: forall x y, x < y -> x < ((x+y) * (1#2))%Q.
+Proof.
+  intros.
+  lra.
+Qed.
 
 Definition interval_proximity_lattice : ProximityLattice.
 Proof.
@@ -168,20 +170,31 @@ Proof.
   - { intros i.
       apply cheating. (* we should delete the axiom "a < 1" from ProximityLattice. *)
     }
-  - { 
+  - {
       intros i j H.
-      destruct i, j. simpl. simpl in *. exists RatBottom. split. trivial. trivial.
-      - exists RatBottom. simpl. split;trivial.
-      - exists RatBottom. simpl. split; trivial.
+      destruct i, j.
+      - now exists RatBottom.
+      - now exists RatBottom.
+      - now exists RatBottom.
       - elim H.
-      - rename q0 into G, p0 into p', q1 into q', q2 into G'. pose (p'':=(p+p')/(2#1)). 
-        pose (q'':=(q+q')/(2#1)). destruct (Qlt_le_dec p'' q'') as [G1|G2].
-           exists (RatProper p'' q'' G1). split. simpl. split. admit. admit. admit. admit.
-      - pose(p':= p-1). pose (q':=q+1). destruct (Qlt_le_dec p' q') as [K1|K2]. simpl. admit. admit.
+      - rename q0 into G, p0 into p', q1 into q', q2 into G'.
+        destruct H.
+        pose (p'':= (p+p') * (1#2)).
+        pose (q'':= (q+q') * (1#2)).
+        assert (G'' : p'' < q'').
+        { unfold p'', q''. lra. }
+        exists (RatProper p'' q'' G'').
+        unfold p'', q'' in *; simpl. lra.
+      - destruct H.
+        assert (G' : p-1 < q+1) by lra.
+        exists (RatProper (p-1) (q+1) G').
+        simpl ; lra.
       - elim H.
       - elim H.
       - elim H.
-Admitted.
+    }
+Defined.
+
 
 
 
