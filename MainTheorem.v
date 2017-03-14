@@ -186,37 +186,32 @@ Proof.
     assumption.
   - unfold  frame_map.
     destruct A. simpl in *.
-    destruct F. simpl in *. (*apply exists_inhabited.*) admit.
+    unfold overlap in *. simpl in *.
+     (*apply exists_inhabited.*) admit.
   - intros.
     unfold not.
     intros.
     destruct H0 as [H1 H2].
-    destruct a, b.
-    rename op_lower0 into a1, op_upper0 into a2, op_proper0 into a_prop,
-           op_lower1 into b1, op_upper1 into b2, op_proper1 into b_prop.
-    unfold separated in *.
-    unfold op_upper in *.
-    unfold op_lower in *.
-    unfold frame_map in *.
+    destruct a as [a1 a2 a_prop].
+    destruct b as [b1 b2 b_prop].
+    unfold separated in *. simpl in *.
+    unfold frame_map in *. simpl in *.
     destruct H1, H2.
-    destruct x as [x1 x2 x_prop]. simpl in *. 
-    destruct x0 as [y1 y2 y_prop]. simpl in *.
-    destruct H, H0, H1.
-    simpl in *.
-    simpl in *. admit. admit.   
-  - intros. 
-    destruct a, b.
-    unfold overlap in *.
-    unfold op_lower in *.
-    unfold op_upper in *.
-    unfold frame_map in *.
-    destruct H0.
-    destruct H0.
-    unfold join in *. 
-    unfold Rmin in *. simpl in *. 
-    destruct (Rle_dec op_lower0 op_lower1).
+    destruct H0, H1.
+    destruct H. 
+    destruct x as [x1 x2 x_prop]. 
+    destruct x0 as [y1 y2 y_prop].
+    admit. admit.
+    
+   - intros. 
+    destruct a as [a1 a2 a_prop].
+    destruct b as [b1 b2 b_prop]. simpl in *.
+    unfold overlap in *. simpl in *.
+    unfold join in *. simpl in *.
+    unfold Rmin in *. simpl in *.
     unfold Rmax in *. simpl in *.
-    destruct (Rle_dec op_upper0 op_upper1).
+    destruct (Rle_dec a1 b1). simpl in *.
+    destruct (Rle_dec a2 b2). simpl in *.
     simpl in *.
   
         admit. admit. admit.
@@ -396,7 +391,7 @@ Defined.
                assumption. 
                assumption. 
        + admit.*)
-Admitted.
+
 
     
 
