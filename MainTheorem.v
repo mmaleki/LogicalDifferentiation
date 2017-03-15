@@ -70,8 +70,20 @@ Definition cl_in (x : R) (a : ClosedInterval) :=
 Definition op_in (x : R) (a : OpenInterval) :=
   op_lower a < x /\ x < op_upper a.
 
+(* If we make separated intervals smaller they are still separated. *)
+Lemma separated_smaller a b a' b' :
+   well_inside a' a -> well_inside b' b -> separated a b -> separated a' b'.
+Proof.
+  destruct a as [a1 a2 Pa].
+  destruct b as [b1 b2 Pb].
+  destruct a' as [a1' a2' Pa'].
+  destruct b' as [b1' b2' Pb'].
+  unfold well_inside, separated; simpl.
+  lra.
+Qed.
+
 (* Substraction of open intervals. *)
-Definition op_subtract (a b : OpenInterval) : OpenInterval.
+  Definition op_subtract (a b : OpenInterval) : OpenInterval.
 Proof.
   refine {| op_lower := op_lower a - op_upper b ;
             op_upper := op_upper a - op_lower b |}.
@@ -360,9 +372,6 @@ Proof.
                     +++ left. split. lra. lra.
 Defined.   
 
-
-      
-
 Lemma lower_below_upper (F : CompleteFilter) a b :
   F a -> F b -> op_lower a < op_upper b.
 Proof.
@@ -375,12 +384,11 @@ Proof.
      - apply (op_proper c).
      - assumption.
 Defined.
-  
 
 Lemma filter2point (F : CompleteFilter) : R.
 Proof.
   (* The set of lower bounds of the number we are constructing. *)
-  pose (E := fun y => exists a, F a /\ y < op_lower a ). 
+  pose (E := fun y => exists a, F a /\ y < op_lower a ).
   assert (bE : bound E).
   { destruct (cf_inhabited F) as [a Fa].
     exists (op_upper a).
@@ -402,7 +410,6 @@ Proof.
   destruct (completeness E bE inhE) as [x lub_x].
   exact x.
 Defined.
- 
 
 Lemma filter_point_inverse (x : R) :
   x = filter2point (point2filter x ).
@@ -468,27 +475,89 @@ Proof.
     nra.
 Defined.
 
+Lemma R_Hausdorff (x y : R) :
+  x <> y ->
+  exists a b : OpenInterval, op_in x a /\ op_in y b /\ (separated a b).
+Proof.
+  intro Nxy.
+  destruct (Rdichotomy x y Nxy).
+  - pose (a1 := x - 1).
+    pose (a2 := (2 * x + y) / 3).
+    assert (a_prop : a1 < a2).
+    { unfold a1, a2. lra. }
+    pose (b1 := (x + 2 * y) / 3).
+    pose (b2 := y + 1).
+    assert (b_prop : b1 < b2).
+    { unfold b1, b2. lra. }
+    exists {| op_lower := a1; op_upper := a2; op_proper := a_prop |}.
+    exists {| op_lower := b1; op_upper := b2; op_proper := b_prop |}.
+    unfold op_in, separated; simpl.
+    unfold a1, a2, b1, b2.
+    lra.
+  - pose (a2 := x + 1).
+    pose (a1 := (2 * x + y) / 3).
+    assert (a_prop : a1 < a2).
+    { unfold a1, a2. lra. }
+    pose (b2 := (x + 2 * y) / 3).
+    pose (b1 := y - 1).
+    assert (b_prop : b1 < b2).
+    { unfold b1, b2. lra. }
+    exists {| op_lower := a1; op_upper := a2; op_proper := a_prop |}.
+    exists {| op_lower := b1; op_upper := b2; op_proper := b_prop |}.
+    unfold op_in, separated; simpl.
+    unfold a1, a2, b1, b2.
+    lra.
+Qed.
 
+Lemma point_directedness (x : R) (a b : OpenInterval) :
+  op_in x a -> op_in x b ->
+  exists c, op_in x c /\ well_inside c a /\ well_inside c b.
+Admitted.
 
-(*
-
-Lemma Hausdorf (x y :R) : x < y -> (exists a : OpenInterval, op_in x a)/\
-               (exists b:OpenInterval, op_in y b) /\ (separated a b).
-*)
+Lemma closed_in_from_open_in (x : R) (a : ClosedInterval) :
+  ((forall c, inside a c -> op_in x c) <-> cl_in x a).
+Proof.
+  split.
+  - intro H.
+    unfold cl_in.
+    split.
+    + destruct a as [a1 a2 prop_a].
+      unfold inside in *.
+      simpl in *.
+      admit.
+    + admit.
+  - intros x_in_a c ins_ac.
+    unfold well_inside, op_in, inside, cl_in in *.
+    destruct a, c.
+    simpl in *.
+    lra.
+Admitted.
 
 (* Main theorems *)
 
 Theorem main_theorem1 (a O : OpenInterval) (A : Bowtie a O):
   delta a (closure O) (dual_fun A).
 Proof.
-  destruct A.
+  destruct A as [A DA].
   unfold delta in *. simpl in *.
-  unfold dual_fun in *. simpl in *.
-  intros.
-  unfold Delta in *. 
-  destruct (Rlt_dec x y).
-   - 
-   -
+  intros x y x_in_a y_in_a.
+  destruct (Req_dec x y).
+   - destruct H.
+     admit.
+   - destruct (R_Hausdorff x y H) as [a' [b' [x_in_a' [y_in_b' sep_a'b']]]].
+     destruct (point_directedness x a' a x_in_a' x_in_a) as [a'' [x_in_a'' [W_a''a' W_a''a]]].
+     destruct (point_directedness y b' a y_in_b' y_in_a) as [b'' [y_in_b'' [W_b''b' W_b''a]]].
+     unfold Delta in DA.
+     destruct (DA a'' b'') as [d [e [Aa''d [Aa''e WI]]]]; try assumption.
+     { now apply (separated_smaller a' b'). }
+     assert (df_Ax_in_d : op_in (dual_fun A x) d).
+     { admit.
+     }
+     assert (df_Ay_in_e : op_in (dual_fun A y) e).
+     { admit. }
+     assert (dfxy_in_de : op_in (dual_fun A x - dual_fun A y) (op_subtract d e)).
+     { admit. }
+     admit.
 Admitted.
 
 
