@@ -176,19 +176,19 @@ Definition frame_map
 
 Definition filter_map (A : ApproximableMap) : CompleteFilter -> CompleteFilter.
 Proof.
-  intro F.
+  intro F. 
   refine {| cf_filter := frame_map A F |}.
   - intros a b Wab [c [Aca Fc]].
     exists c.
     split.
     + now apply (app_monotone_r _ c a b).
     + assumption.
-  - unfold  frame_map.
+  - unfold  frame_map. 
     destruct (cf_inhabited F) as [a' Fa'].
     destruct (app_total A a') as [a'' Aa'a''].
     now exists a'', a'.
   - intros a b sep_ab.
-    intros [[c [Aca Fc]] [d [Adb Fd]]].
+    intros [[c [Aca Fc]] [d [Adb Fd]]]. 
     destruct (cf_directed F c d Fc Fd) as [e [Wea [Wed Fe]]].
     assert (Aea : A e a).
     { eapply app_monotone_l.
@@ -201,7 +201,7 @@ Proof.
     pose (G := app_disjoint A e a b sep_ab).
     now absurd (A e a /\ A e b).
    - intros a b [c [Aca Fc]] [d [Adb Fd]].
-    destruct (cf_directed F c d Fc Fd) as [e [Wea [Wed Fe]]].
+    destruct (cf_directed F c d Fc Fd) as [e [Wec [Wed Fe]]].
     assert (Aea : A e a).
     { eapply app_monotone_l.
       - exact Aca.
@@ -226,133 +226,161 @@ Defined.
 
 Definition point2filter (x : R) : CompleteFilter.
 Proof.
+  intros.
   refine {| cf_filter := fun a => op_in x a |}.
-   - intros.
-     destruct a, b.
-     unfold well_inside in *.
-     unfold op_lower in *.
-     unfold op_upper in *.
+   -intros a b Wab x_in_a. 
+    unfold op_in in *.
+    destruct Wab.
+    destruct x_in_a.
+    split.
+     + lra. 
+     + lra.  
+   -  assert (C : x-1 < x+1) by lra.
+     exists {| op_lower := x-1; op_upper := x+1; op_proper := C |}. 
      unfold op_in in *.
-     unfold op_proper in *.
-     unfold op_lower in *.
-     unfold op_upper in *.
-     destruct H.
-     destruct H0.
-     split.
-     lra.
-     lra.
-   - unfold op_in.
-     assert (C : x-1 < x+1) by lra.
-     exists {| op_lower := x-1; op_upper := x+1; op_proper := C |}.
-     unfold op_lower.
-     unfold op_upper.
+     simpl in *.
      lra.
    - intros.
      unfold not.
      intros.
+     destruct H. 
+     unfold op_in in *. 
+     destruct H0, H1.
+     + destruct H0.
+       lra.
+     + destruct H0. 
+       unfold op_in in *.
+       lra.
+   - intros.
      destruct a as [a1 a2 a_prop].
      destruct b as [b1 b2 b_prop].
-     destruct H0.
-     unfold separated in *. simpl in *.
-     unfold op_upper in *. simpl in *.
-     unfold op_lower in *. simpl in *.
-     unfold op_in in *. simpl in *.
-     unfold op_lower in *. simpl in *.
-     unfold op_upper in *. simpl in *.
-     destruct H, H0, H1. lra. lra.
-
-(*
-   - intros.
-     destruct H, H0.
-     destruct a as [a1 a2 a_prop].
-     destruct b as [b1 b2 b_prob].
+     destruct H. simpl in *.
+     destruct H0. simpl in *.
+     unfold well_inside in *. simpl in *.
+     assert (G: (Rmax a1 b1 +x)/2 < (Rmin a2 b2 +x)/2).
+      { unfold Rmax in *. destruct (Rle_dec a1 b1).
+        * unfold Rmin in *. destruct (Rle_dec a2 b2).
+          -- lra.
+          -- lra.
+        * unfold Rmin in *. destruct(Rle_dec a2 b2).
+          --- lra.
+          --- lra. }
+     exists {| op_lower := (Rmax a1 b1 + x) / 2;
+               op_upper := (Rmin a2 b2 + x) / 2;
+               op_proper := G|}.
      simpl in *.
-     destruct (Rlt_dec b2 a2).
-     * unfold op_in, Rmin in *. simpl in *. (*The case a1<b1<a2 *)
-       destruct (Rle_dec a1 b1).
-        simpl in *.
-        unfold Rmax in *. simpl in *.
-        destruct (Rle_dec a2 b2). simpl in *.
-     + left. lra.
-     +  left. lra.
-     +  unfold Rmax in *. simpl in *.
-        destruct (Rle_dec a2 b2). simpl in *.
-        right. lra. lra.
-     + unfold op_in in *. simpl in *.
-       destruct (Rlt_dec a2 b2).
-       ** destruct (Rle_dec x b1).
-          unfold Rmin in *. simpl in *.
-          destruct (Rle_dec a1 b1).
-          unfold Rmax in *. simpl in *.
-          destruct (Rle_dec a2 b2). simpl in *.
-          left. lra . lra. lra.
-          right.
-          unfold Rmin in *. simpl in *.
-          destruct (Rle_dec a1 b1).
-          unfold Rmax in *. simpl in *.
-          destruct (Rle_dec a2 b2). simpl in *.
-          lra. lra. lra.
-       ** left.
-          unfold Rmin in *. simpl in *.
-          destruct (Rle_dec a1 b1).
-          unfold Rmax in *. simpl in *.
-          destruct (Rle_dec a2 b2). simpl in *.
-          lra. lra. lra.
-       * destruct a as [a1 a2 a_prop].
-       destruct b as [b1 b2 b_prob].
-       simpl in *.
-       destruct (Rlt_dec b2 a2). unfold op_in in *. simpl in *. (*The case a1<b1<a2 *)
-        unfold Rmin in *. simpl in *.
-        destruct (Rle_dec a1 b1 ).
-        simpl in *.
-        unfold Rmax in *. simpl in *.
-        destruct (Rle_dec a2 b2). simpl in *.
-      + right. lra.
+     split. 
+      + split. 
+        -- unfold Rmax in *. destruct ( Rle_dec a1 b1).
+           ++ lra.
+           ++ lra.
+        -- unfold Rmin in *. destruct (Rle_dec a2 b2).
+           ++ lra.
+           ++ lra.
+      + split.
+        -- split.
+           ++ unfold Rmax in *. destruct (Rle_dec a1 b1 ).
+              * lra.
+              * lra.
+           ++ unfold Rmin in *. destruct (Rle_dec a2 b2).
+              ** lra.
+              ** lra. 
+        -- unfold op_in in *.
+           simpl in *.
+           split.
+             +++ unfold Rmax in *. destruct (Rle_dec a1 b1 ).
+                 --- lra.
+                 --- lra.
+             +++ unfold Rmin in *. destruct (Rle_dec a2 b2).
+                 --- lra.
+                 --- lra.
+   - intros.
+     destruct H, H.
+     destruct H0.
+      + unfold join in *. simpl in *.
+        unfold Rmin in *.
+        destruct (Rle_dec (op_lower a) (op_lower b)).
+          -- unfold Rmax in *.
+             destruct (Rle_dec (op_upper a) (op_upper b)).
+             *** destruct (Rle_dec x (op_lower b)).
+                  ++++ left.
+                       split.
+                       lra.
+                       lra. 
+                  ++++ right.
+                       split.
+                       lra.
+                       lra.                       
+             *** left. 
+                 split.
+                 lra.
+                 lra.
+        -- unfold Rmax in *.
+           destruct (Rle_dec (op_upper a) (op_upper b)).
+           *** right. 
+               split.
+               lra.
+               lra.
+           *** left.
+               split.
+               lra.
+               lra.
+    + destruct H0. 
+      unfold join in *. simpl in *. 
+        unfold Rmin in *. 
+        destruct (Rle_dec (op_lower a) (op_lower b)).
+          -- unfold Rmax in *.
+             destruct (Rle_dec (op_upper a) (op_upper b)).
+             *** destruct (Rle_dec x (op_lower b)).
+                  ++++ left.
+                       split.
+                       lra.
+                       lra. 
+                  ++++ right.
+                       split.
+                       lra.
+                       lra.                       
+             *** left. 
+                 split.
+                 lra.
+                 lra.
+        -- unfold Rmax in *.
+           destruct (Rle_dec (op_upper a) (op_upper b)).
+           *** right. 
+               split.
+               lra.
+               lra.
+           *** destruct (Rlt_dec x(op_lower a)).
+                ---  right.
+                     split.
+                     lra.
+                     lra.
+               --- destruct (Rle_dec x (op_lower a)).
+                    +++ right. split. lra. lra.
+                    +++ left. split. lra. lra.
+Defined.   
 
-       +  right. lra.
-       +  unfold Rmax in *. simpl in *.
-        destruct (Rle_dec a2 b2). simpl in *.
-        left. lra. lra.
-       + unfold op_in in *. simpl in *.
-          destruct (Rlt_dec a2 b2).
-           ** destruct (Rle_dec x a1).
-              unfold Rmin in *. simpl in *.
-              destruct (Rle_dec a1 b1).
-              unfold Rmax in *. simpl in *.
-              destruct (Rle_dec a2 b2). simpl in *.
-              right. lra . lra. lra.
-              right.
-               unfold Rmin in *. simpl in *.
-              destruct (Rle_dec a1 b1).
-              unfold Rmax in *. simpl in *.
-              destruct (Rle_dec a2 b2). simpl in *.
-              lra. lra. split. lra.
-              unfold Rmax in *. simpl in *.
-              destruct (Rle_dec a2 b2). simpl in *.
-              lra. lra.
-           ** right.
-              unfold Rmin in *. simpl in *.
-              destruct (Rle_dec a1 b1).
-              unfold Rmax in *. simpl in *.
-              destruct (Rle_dec a2 b2). simpl in *.
-              lra. lra.
-              unfold Rmax in *. simpl in *.
-              destruct (Rle_dec a2 b2). simpl in *.
-              lra. lra.
-*)
-Admitted.
+
+      
 
 Lemma lower_below_upper (F : CompleteFilter) a b :
   F a -> F b -> op_lower a < op_upper b.
 Proof.
-  (* exercise *)
-  admit.
-Admitted.
+   intros Fa Fb.
+   destruct (cf_directed F a b Fa Fb) as [c[Wca [Wcb Fc]]].
+   destruct Wca, Wcb.
+   eapply Rlt_trans.
+   + apply H.
+   + apply (Rlt_trans (op_lower c) (op_upper c) (op_upper b)).
+     - apply (op_proper c).
+     - assumption.
+Defined.
+  
 
 Lemma filter2point (F : CompleteFilter) : R.
 Proof.
   (* The set of lower bounds of the number we are constructing. *)
-  pose (E := fun y => exists a, F a /\ y < op_lower a ).
+  pose (E := fun y => exists a, F a /\ y < op_lower a ). 
   assert (bE : bound E).
   { destruct (cf_inhabited F) as [a Fa].
     exists (op_upper a).
@@ -374,10 +402,36 @@ Proof.
   destruct (completeness E bE inhE) as [x lub_x].
   exact x.
 Defined.
+ 
 
 Lemma filter_point_inverse (x : R) :
-  x = filter2point (point2filter x).
+  x = filter2point (point2filter x ).
+Proof.
+ pose (E := fun y => exists a, (point2filter x) a /\ y < op_lower a ).
+   assert (bE : bound E).
+  { destruct (cf_inhabited (point2filter x)) as [a Fa].
+    exists (op_upper a).
+    intros y [b [Fb x_leq_b]].
+    apply Rlt_le.
+    apply (Rle_lt_trans y (op_lower b) (op_upper a)).
+    + now apply Rlt_le.
+    + now apply (lower_below_upper (point2filter x)).
+  }
+ assert (inhE : exists y : R, E y).
+  { destruct (cf_inhabited (point2filter x)) as [a Fa].
+    exists (op_lower a - 1).
+    unfold E.
+    exists a.
+    split.
+    - assumption.
+    - lra.
+  }
+  destruct (completeness E bE inhE) as [z lub_z].
+  assert (Eq: z = filter2point (point2filter x)).
+  admit.
 Admitted.
+ 
+ 
 
 Lemma point_filter_inverse (F : CompleteFilter) :
   forall a, F a <-> (point2filter (filter2point F)) a.
@@ -414,11 +468,27 @@ Proof.
     nra.
 Defined.
 
+
+
+(*
+
+Lemma Hausdorf (x y :R) : x < y -> (exists a : OpenInterval, op_in x a)/\
+               (exists b:OpenInterval, op_in y b) /\ (separated a b).
+*)
+
 (* Main theorems *)
 
 Theorem main_theorem1 (a O : OpenInterval) (A : Bowtie a O):
   delta a (closure O) (dual_fun A).
 Proof.
+  destruct A.
+  unfold delta in *. simpl in *.
+  unfold dual_fun in *. simpl in *.
+  intros.
+  unfold Delta in *. 
+  destruct (Rlt_dec x y).
+   - 
+   -
 Admitted.
 
 
