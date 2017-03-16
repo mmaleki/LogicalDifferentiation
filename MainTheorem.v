@@ -22,7 +22,6 @@ Structure ClosedInterval := {
 Definition separated (a b : OpenInterval) :=
  op_upper a < op_lower b \/ op_upper b < op_lower a.
 
-
 Definition overlap (a b : OpenInterval) :=
   (op_lower a < op_lower b /\ op_lower b < op_upper a) \/
   (op_lower b < op_lower a /\ op_lower a < op_upper b).
@@ -81,6 +80,56 @@ Proof.
   unfold well_inside, separated; simpl.
   lra.
 Qed.
+
+(* f is continuous on a closed interval a *)
+Definition cl_continuous_on (f : R -> R) (a : ClosedInterval) :=
+  forall x, cl_in x a -> continuity_pt f x.
+
+Definition cl_lower_bound (f : R -> R) (a : ClosedInterval) (m : R) :=
+  forall x, cl_in x a -> m <= f x.
+
+Definition cl_upper_bound (f : R -> R) (a : ClosedInterval) (m : R) :=
+  forall x, cl_in x a -> f x <= m.
+
+(* the minimum of a continuous f on a closed interval a *)
+Axiom cl_min :
+  forall (f : R -> R) (a : ClosedInterval),
+  cl_continuous_on f a ->
+  { m : R | cl_lower_bound f a m /\
+            (forall m', cl_lower_bound f a m' -> m' <= m) }.
+
+Axiom cl_max :
+  forall (f : R -> R) (a : ClosedInterval),
+  cl_continuous_on f a ->
+  { m : R | cl_upper_bound f a m /\
+            (forall m', cl_upper_bound f a m' -> m <= m') }.
+
+(* b is the image of a by f *)
+Definition cl_is_image (f : R -> R) (a b : ClosedInterval) :=
+  (forall x, cl_in x a -> cl_in (f x) b) /\
+  (forall y, cl_in y b -> exists x, cl_in x a /\ f x = y).
+
+(* The image of a closed interval by a contunuous function is a closed interval. *)
+Definition cl_image (f : R -> R) (a : ClosedInterval) :
+  cl_continuous_on f a ->
+  { b : ClosedInterval | cl_is_image f a b }.
+Proof.
+  intro cont_f.
+  destruct (cl_min f a cont_f) as [m m_is_glb].
+  destruct (cl_max f a cont_f) as [M M_is_lub].
+  assert (m_le_M : m <= M).
+  { admit. }
+  exists {| cl_lower := m ; cl_upper := M ; cl_proper := m_le_M |}.
+  split.
+  - intros x x_in_a.
+    split.
+    + now apply m_is_glb.
+    + now apply M_is_lub.
+  - unfold cl_in; simpl.
+    intros y [m_y y_M].
+    admit. (* intermediate value theorem *)
+Admitted.
+
 
 (* Substraction of open intervals. *)
   Definition op_subtract (a b : OpenInterval) : OpenInterval.
@@ -565,6 +614,11 @@ Theorem main_theorem2 (a : OpenInterval) (b : ClosedInterval) (f : bowtie a b) :
   forall O : OpenInterval, inside b O ->
   forall a0 : OpenInterval, inside (closure a0) a -> Delta a0 O (Approx f).
 Proof.
+  intros O ins_bO c ins_c_a.
+  intros a1 a2 wi_a1c wi_a2c sep_a1a2.
+
+
+
  (*
   intros [O1 O2 Proper_O] [Inside_bO] [a01 a02 Proper_a0] [Inside_a0a_1 Inside_a0a_2]
          [c1 c2 Proper_c] [d1 d2 Proper_d] [WI_ca1 WI_ca2] [WI_da1 WI_da2] Separated_cd.
@@ -577,7 +631,6 @@ Proof.
   unfold cl_in, op_in.
   simpl in *. *)
   intros.
-  intros c d Ica0 Ida0 Sep_cd.
   admit.
 Admitted.
 
