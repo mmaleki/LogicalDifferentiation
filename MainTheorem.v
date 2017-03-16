@@ -512,12 +512,86 @@ Qed.
 Lemma point_directedness (x : R) (a b : OpenInterval) :
   op_in x a -> op_in x b ->
   exists c, op_in x c /\ well_inside c a /\ well_inside c b.
-Admitted.
+Proof.
+   intros x_in_a x_in_b.
+   destruct x_in_a, x_in_b.
+   pose (z1 := Rmax (op_lower a) (op_lower b)).
+   pose (z2 := Rmin (op_upper a) (op_upper b)).
+   unfold Rmax in *. 
+   destruct (Rle_dec (op_lower a) (op_lower b)). 
+   unfold Rmin in *.
+   destruct (Rle_dec (op_upper a) (op_upper b)).
+   assert (G: (z1+x)/2 < (z2+x)/2).
+      {unfold z1, z2. lra. } 
+   exists {|op_lower := (z1+x)/2; 
+               op_upper := (z2+x)/2;
+               op_proper := G |}.
+    - unfold op_in in *. simpl in *.
+      split. 
+      + split.
+        ** unfold z1. lra.
+        **  unfold z2. lra.
+      + split.
+        ** unfold well_inside in *. simpl in *. split.
+           -- unfold z1. lra.
+           -- unfold z2. lra.
+        ** unfold well_inside in *. simpl in *. split.
+           -- unfold z1. lra.
+           -- unfold z2. lra.
+   - assert (G: (z1+x)/2 < (z2+x)/2).
+      {unfold z1, z2. lra. } 
+      exists {|op_lower := (z1+x)/2; 
+               op_upper := (z2+x)/2;
+               op_proper := G |}.
+      unfold op_in in *. simpl in *.
+      split. 
+      + split.
+        ** unfold z1. lra.
+        **  unfold z2. lra.
+      + split.
+        ** unfold well_inside in *. simpl in *. split.
+           -- unfold z1. lra.
+           -- unfold z2. lra.
+        ** unfold well_inside in *. simpl in *. split.
+           -- unfold z1. lra.
+           -- unfold z2. lra.
+    - unfold Rmin in *.
+      destruct (Rle_dec (op_upper a) (op_upper b)).
+      assert (G: (z1+x)/2 < (z2+x)/2).
+      {unfold z1, z2. lra. } 
+      exists {|op_lower := (z1+x)/2; 
+               op_upper := (z2+x)/2;
+               op_proper := G |}.
+      unfold op_in in *. simpl in *.
+      split. 
+      + split.
+        ** unfold z1. lra.
+        **  unfold z2. lra.
+      + split.
+        ** unfold well_inside in *. simpl in *. split.
+           -- unfold z1. lra.
+           -- unfold z2. lra.
+        ** unfold well_inside in *. simpl in *. split.
+           -- unfold z1. lra.
+           -- unfold z2. lra.
+      +  assert (G: (z1+x)/2 < (z2+x)/2).
+      {unfold z1, z2. lra. } 
+      exists {|op_lower := (z1+x)/2; 
+               op_upper := (z2+x)/2;
+               op_proper := G |}.
+      unfold op_in in *. simpl in *.
+      unfold well_inside in *. simpl in *.
+      split. 
+         ***  unfold z1, z2.
+              lra.
+         *** unfold z1, z2. lra.
+Defined.
+
 
 Lemma closed_in_from_open_in (x : R) (a : ClosedInterval) :
   ((forall c, inside a c -> op_in x c) <-> cl_in x a).
 Proof.
-  split.
+  split. 
   - intro H.
     unfold cl_in.
     split.
