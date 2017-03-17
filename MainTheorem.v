@@ -7,6 +7,23 @@ Require Lra.
 
 Local Open Scope R_scope.
 
+Axiom cheating : forall (A : Type), A.
+Ltac cheat := apply cheating.
+
+(* tactics for dealing with Rmin and Rmax *)
+Ltac unfold_Rle_dec :=
+  match goal with
+  | |- context [Rle_dec ?a ?b] => destruct (Rle_dec a b) ; simpl ; unfold_Rle_dec
+  | _ : context [Rle_dec ?a ?b] |- _ =>
+    destruct (Rle_dec a b) ; simpl ; unfold_Rle_dec
+  | _ => idtac
+  end.
+
+Ltac handle_Rminmax :=
+  simpl ; unfold Rmin, Rmax in * ; unfold_Rle_dec.
+
+(* Basic definitions. *)
+
 Structure OpenInterval := {
   op_lower : R ;
   op_upper : R ;
@@ -19,10 +36,10 @@ Structure ClosedInterval := {
   cl_proper : cl_lower <= cl_upper
 }.
 
-Structure PositiveInterval :={
-   interval:> OpenInterval;
-   interval_prop: op_lower interval >0
-} .
+Structure PositiveInterval := {
+  pos_interval :> OpenInterval ;
+  pos_positive : op_lower pos_interval > 0
+}.
 
 
 Definition separated (a b : OpenInterval) :=
@@ -41,7 +58,7 @@ Proof.
   destruct a as [a1 a2 Pa].
   destruct b as [b1 b2 Pb].
   unfold Rmin, Rmax; simpl.
-  destruct (Rle_dec a1 b1) ; destruct (Rle_dec a2 b2) ; lra.
+  handle_Rminmax ; lra.
 Defined.
 
 Definition closure : OpenInterval -> ClosedInterval.
@@ -51,81 +68,47 @@ Proof.
   apply Rlt_le, op_proper.
 Defined.
 
-Definition inside (a : ClosedInterval) (b : OpenInterval) :=
+Definition opop_inside (a : OpenInterval) (b : OpenInterval) :=
+  op_lower b <= op_lower a /\ op_upper a <= op_upper b.
+
+Definition clop_inside (a : ClosedInterval) (b : OpenInterval) :=
   op_lower b < cl_lower a /\ cl_upper a < op_upper b.
 
-Definition inside_open (a : OpenInterval) (b : ClosedInterval) :=
+Definition opcl_inside (a : OpenInterval) (b : ClosedInterval) :=
   cl_lower b <= op_lower a /\ op_upper a <= cl_upper b.
 
+Definition clcl_inside a b :=
+  cl_lower b <= cl_lower a /\ cl_upper a <= cl_upper b.
 
 Definition well_inside (a b : OpenInterval) :=
   op_lower b < op_lower a /\ op_upper a < op_upper b.
 
+Definition well_inside_tran a b c :
+  well_inside a b -> well_inside b c -> well_inside a c.
+Proof.
+  destruct a, b, c.
+  unfold well_inside.
+  simpl.
+  lra.
+Qed.
+
 (* Multiplication of a closed interval by a scalar. *)
-Definition scalar_mul (x : R) (a : ClosedInterval) : ClosedInterval.
+Definition cl_scalar_mul (x : R) (a : ClosedInterval) : ClosedInterval.
 Proof.
   refine {| cl_lower := Rmin (x * cl_lower a) (x * cl_upper a) ;
             cl_upper := Rmax (x * cl_lower a) (x * cl_upper a) |}.
   now apply Rminmax.
 Defined.
 
-
-
-Definition open_multp_open (a b :OpenInterval):OpenInterval.
+(* Multiplication of an open interval by a non-zero scalar. *)
+Definition op_scalar_mul (x : R) (H : x <> 0) (a : OpenInterval) :
+  OpenInterval.
 Proof.
-   refine{| op_lower := Rmin (Rmin ((op_lower a) * (op_lower b)) ((op_lower a) * (op_upper b)))
-                             (Rmin ((op_upper a) * (op_lower b)) ((op_upper a) * (op_upper b)));
-            op_upper := Rmax (Rmax ((op_lower a) * (op_lower b)) ((op_lower a) * (op_upper b)))
-                             (Rmax ((op_upper a) * (op_lower b)) ((op_upper a) * (op_upper b)))|}.
-   unfold Rmin , Rmax in *. simpl in *.
-   destruct a as [a1 a2 a_prop].
-   destruct b as [b1 b2 b_prop]. simpl in *.
-   destruct (Rle_dec (a1 * b1) (a1 * b2)).
-    - destruct (Rle_dec (a2 * b1) (a2 * b2) ). 
-      + destruct(Rle_dec (a1 * b1) (a2 * b1)).
-        -- destruct (Rle_dec (a1 * b2) (a2 * b2)). 
-           *** destruct (Rlt_dec 0 a1).  
-               --- assert (G: a1*b1<a1*b2).
-                   { apply (Rmult_lt_compat_l a1 b1 b2 r3 b_prop). }
-                   apply (Rlt_le_trans (a1 * b1) (a1*b2) (a2*b2)). lra. lra.
-               ---admit.
-           *** admit. 
-        -- destruct (Rle_dec (a1 * b2) (a2 * b2)).
-           *** admit.
-           *** admit.
-      + destruct (Rle_dec (a1 * b1) (a2 * b2)).
-        -- destruct (Rle_dec (a1 * b2) (a2 * b1)).
-           *** admit.
-           *** admit.
-        -- destruct (Rle_dec (a1 * b2) (a2 * b1)).
-           *** admit.
-           *** admit.
-    
-    - destruct ( Rle_dec (a2 * b1) (a2 * b2)).
-      + destruct (Rle_dec (a1 * b2) (a2 * b1)).
-        -- destruct (Rle_dec (a1 * b1) (a2 * b2)).
-          +++ admit.
-          +++ admit.
-        -- destruct (Rle_dec (a1 * b1) (a2 * b2)).
-          +++ admit.
-          +++ admit.
-      + destruct (Rle_dec (a1 * b2) (a2 * b2)).
-        -- destruct (Rle_dec (a1 * b1) (a2 * b1)).
-           +++ admit.
-           +++ admit.
-        --destruct (Rle_dec (a1 * b1) (a2 * b1)).
-           +++ admit.
-           +++ admit.
-Admitted.
-
-Definition closed_multp_open (a :ClosedInterval)(b :OpenInterval):OpenInterval.
-Proof.
-   refine{| op_lower := Rmin (Rmin ((cl_lower a) * (op_lower b)) ((cl_lower a) * (op_upper b)))
-                             (Rmin ((cl_upper a) * (op_lower b)) ((cl_upper a) * (op_upper b)));
-            op_upper := Rmax (Rmax ((cl_lower a) * (op_lower b)) ((cl_lower a) * (op_upper b)))
-                             (Rmax ((cl_upper a) * (op_lower b)) ((cl_upper a) * (op_upper b)))|}.
-
-Admitted.
+  refine {| op_lower := Rmin (x * op_lower a) (x * op_upper a) ;
+            op_upper := Rmax (x * op_lower a) (x * op_upper a) |}.
+  destruct a.
+  handle_Rminmax ; nra.
+Defined.
 
 Definition cl_in (x : R) (a : ClosedInterval) :=
   cl_lower a <= x /\ x <= cl_upper a.
@@ -149,7 +132,22 @@ Qed.
 Definition cl_continuous_on (f : R -> R) (a : ClosedInterval) :=
   forall x, cl_in x a -> continuity_pt f x.
 
- 
+Lemma cl_in_monotone x a b :
+  cl_in x a -> clcl_inside a b -> cl_in x b.
+Proof.
+  destruct a, b.
+  unfold cl_in, clcl_inside.
+  simpl in *.
+  lra.
+Qed.
+
+Lemma cl_continuous_restrict (f : R -> R) a b :
+  cl_continuous_on f b -> clcl_inside a b -> cl_continuous_on f a.
+Proof.
+  intros H in_a_b x x_in_a.
+  now apply H, (cl_in_monotone x a).
+Qed.
+
 Definition cl_lower_bound (f : R -> R) (a : ClosedInterval) (m : R) :=
   forall x, cl_in x a -> m <= f x.
 
@@ -162,7 +160,6 @@ Axiom cl_min :
   cl_continuous_on f a ->
   { m : R | cl_lower_bound f a m /\
             (forall m', cl_lower_bound f a m' -> m' <= m) }.
-
 
 Axiom cl_max :
   forall (f : R -> R) (a : ClosedInterval),
@@ -184,7 +181,7 @@ Proof.
   destruct (cl_min f a cont_f) as [m m_is_glb].
   destruct (cl_max f a cont_f) as [M M_is_lub].
   assert (m_le_M : m <= M).
-  { admit. }
+  { cheat. }
   exists {| cl_lower := m ; cl_upper := M ; cl_proper := m_le_M |}.
   split.
   - intros x x_in_a.
@@ -193,9 +190,8 @@ Proof.
     + now apply M_is_lub.
   - unfold cl_in; simpl.
     intros y [m_y y_M].
-    admit. (* intermediate value theorem *)
-Admitted.
-
+    cheat. (* intermediate value theorem *)
+Defined.
 
 (* Substraction of open intervals. *)
   Definition op_subtract (a b : OpenInterval) : OpenInterval.
@@ -203,7 +199,7 @@ Proof.
   refine {| op_lower := op_lower a - op_upper b ;
             op_upper := op_upper a - op_lower b |}.
   destruct a, b.
-  simpl in *. 
+  simpl in *.
   lra.
 Defined.
 
@@ -216,18 +212,57 @@ Proof.
   lra.
 Defined.
 
+Lemma minus_interval_image (f : R -> R)
+      (a1 a2 : ClosedInterval)
+      (c : OpenInterval) :
+  forall (cont_f_a1 : cl_continuous_on f a1)
+         (cont_f_a2 : cl_continuous_on f a2),
+    (forall x y, cl_in x a1 ->
+                 cl_in y a2 ->
+                 op_in (f x - f y) c)
+    ->
+    clop_inside
+      (cl_subtract
+         (proj1_sig (cl_image f a1 cont_f_a1))
+         (proj1_sig (cl_image f a2 cont_f_a2)))
+      c.
+Proof.
+  intros cont_f_a1 cont_f_a2 H.
+  destruct (cl_image f a1 cont_f_a1) as [fa1 [Ha1 Ga1]].
+  destruct (cl_image f a2 cont_f_a2) as [fa2 [Ha2 Ga2]].
+  simpl.
+  unfold cl_is_image in *.
+  destruct fa1 as [fa1_m fa1_M fa1_prop].
+  destruct fa2 as [fa2_m fa2_M fa2_prop].
+  destruct a1 as [a11 a12 a1_prop].
+  destruct a2 as [a21 a22 a2_prop].
+  unfold cl_in, cl_subtract, clop_inside in *.
+  simpl in *.
+  split.
+  - destruct (Ga1 fa1_m) as [x_m [xm_in_a1 fxm_fa1m]].
+    { lra. }
+    destruct (Ga2 fa2_M) as [x_M [xM_in_a2 fxM_fa2M]].
+    { lra. }
+    rewrite <- fxm_fa1m.
+    rewrite <- fxM_fa2M.
+    now apply (H x_m x_M).
+  - destruct (Ga1 fa1_M) as [y_M [yM_in_a1 fyM_fa1M]].
+    { lra. }
+    destruct (Ga2 fa2_m) as [y_m [ym_in_a2 fym_fa2m]].
+    { lra. }
+    rewrite <- fyM_fa1M.
+    rewrite <- fym_fa2m.
+    now apply (H y_M y_m).
+Qed.
+
+
 Definition op_multiply (a b : OpenInterval) : OpenInterval.
 Proof.
   destruct a as [a1 a2 ?].
   destruct b as [b1 b2 ?].
   refine {| op_lower := Rmin (Rmin (a1 * b1) (a1 * b2)) (Rmin (a2 * b1) (a2 * b2)) ;
             op_upper := Rmax (Rmax (a1 * b1) (a1 * b2)) (Rmax (a2 * b1) (a2 * b2)) |}.
-  unfold Rmin, Rmax.
-  destruct (Rle_dec (a1 * b1) (a1 * b2)), (Rle_dec (a2 * b1) (a2 * b2)) ; simpl.
-  - destruct (Rle_dec (a1 * b1) (a2 * b1)), (Rle_dec (a1 * b2) (a2 * b2)) ; simpl ; nra.
-  - destruct (Rle_dec (a1 * b1) (a2 * b2)), (Rle_dec (a1 * b2) (a2 * b1)) ; simpl ; nra.
-  - destruct (Rle_dec (a1 * b2) (a2 * b1)), (Rle_dec (a1 * b1) (a2 * b2)) ; simpl ; nra.
-  - destruct (Rle_dec (a1 * b2) (a2 * b2)), (Rle_dec (a1 * b1) (a2 * b1)) ; simpl ; nra.
+  handle_Rminmax ; nra.
 Defined.
 
 Definition Approx (f : R -> R) (a O : OpenInterval) :=
@@ -235,7 +270,7 @@ Definition Approx (f : R -> R) (a O : OpenInterval) :=
 
 Definition delta (a : OpenInterval) (b : ClosedInterval) (f : R -> R) :=
    forall x y : R, op_in x a -> op_in y a ->
-                cl_in (f x - f y) (scalar_mul (x - y) b).
+                cl_in (f x - f y) (cl_scalar_mul (x - y) b).
 
 Definition Delta (a O : OpenInterval) (A : OpenInterval -> OpenInterval -> Prop) :=
   forall a1 a2,
@@ -249,9 +284,9 @@ Definition Delta (a O : OpenInterval) (A : OpenInterval -> OpenInterval -> Prop)
 Definition strong_delta (a : OpenInterval) (b : ClosedInterval) (f : R -> R) :=
    exists (a' b' : OpenInterval),
      well_inside a a' ->
-     inside_open b' b ->
+     opcl_inside b' b ->
      forall x y : R, op_in x a' -> op_in y a' ->
-                     cl_in (f x - f y) (scalar_mul (x - y) (closure b')).
+                     cl_in (f x - f y) (cl_scalar_mul (x - y) (closure b')).
 
 Definition StrongDelta (a O : OpenInterval) (A : OpenInterval -> OpenInterval -> Prop) :=
    exists a' O',
@@ -269,7 +304,7 @@ Structure bowtie (a : OpenInterval) (b : ClosedInterval) := {
   bow_map :> R -> R ;
   bow_lipschitz :
     forall x y : R, op_in x a -> op_in y a ->
-                cl_in (bow_map x - bow_map y) (scalar_mul (x - y) b)
+                cl_in (bow_map x - bow_map y) (cl_scalar_mul (x - y) b)
 }.
 
 Structure ApproximableMap : Type := {
@@ -364,14 +399,14 @@ Definition point2filter (x : R) : CompleteFilter.
 Proof.
   intros.
   refine {| cf_filter := fun a => op_in x a |}.
-   -intros a b Wab x_in_a. 
+  - intros a b Wab x_in_a.
     unfold op_in in *.
     destruct Wab.
     destruct x_in_a.
     split.
-     + lra. 
-     + lra.  
-   -  assert (C : x-1 < x+1) by lra.
+     + lra.
+     + lra.
+   - assert (C : x-1 < x+1) by lra.
      exists {| op_lower := x-1; op_upper := x+1; op_proper := C |}. 
      unfold op_in in *.
      simpl in *.
@@ -394,107 +429,17 @@ Proof.
      destruct H0. simpl in *.
      unfold well_inside in *. simpl in *.
      assert (G: (Rmax a1 b1 +x)/2 < (Rmin a2 b2 +x)/2).
-      { unfold Rmax in *. destruct (Rle_dec a1 b1).
-        * unfold Rmin in *. destruct (Rle_dec a2 b2).
-          -- lra.
-          -- lra.
-        * unfold Rmin in *. destruct(Rle_dec a2 b2).
-          --- lra.
-          --- lra. }
+     { handle_Rminmax ; lra. }
      exists {| op_lower := (Rmax a1 b1 + x) / 2;
                op_upper := (Rmin a2 b2 + x) / 2;
-               op_proper := G|}.
+               op_proper := G |}.
      simpl in *.
-     split. 
-      + split. 
-        -- unfold Rmax in *. destruct ( Rle_dec a1 b1).
-           ++ lra.
-           ++ lra.
-        -- unfold Rmin in *. destruct (Rle_dec a2 b2).
-           ++ lra.
-           ++ lra.
-      + split.
-        -- split.
-           ++ unfold Rmax in *. destruct (Rle_dec a1 b1 ).
-              * lra.
-              * lra.
-           ++ unfold Rmin in *. destruct (Rle_dec a2 b2).
-              ** lra.
-              ** lra. 
-        -- unfold op_in in *.
-           simpl in *.
-           split.
-             +++ unfold Rmax in *. destruct (Rle_dec a1 b1 ).
-                 --- lra.
-                 --- lra.
-             +++ unfold Rmin in *. destruct (Rle_dec a2 b2).
-                 --- lra.
-                 --- lra.
-   - intros.
-     destruct H, H.
-     destruct H0.
-      + unfold join in *. simpl in *.
-        unfold Rmin in *.
-        destruct (Rle_dec (op_lower a) (op_lower b)).
-          -- unfold Rmax in *.
-             destruct (Rle_dec (op_upper a) (op_upper b)).
-             *** destruct (Rle_dec x (op_lower b)).
-                  ++++ left.
-                       split.
-                       lra.
-                       lra. 
-                  ++++ right.
-                       split.
-                       lra.
-                       lra.                       
-             *** left. 
-                 split.
-                 lra.
-                 lra.
-        -- unfold Rmax in *.
-           destruct (Rle_dec (op_upper a) (op_upper b)).
-           *** right. 
-               split.
-               lra.
-               lra.
-           *** left.
-               split.
-               lra.
-               lra.
-    + destruct H0. 
-      unfold join in *. simpl in *. 
-        unfold Rmin in *. 
-        destruct (Rle_dec (op_lower a) (op_lower b)).
-          -- unfold Rmax in *.
-             destruct (Rle_dec (op_upper a) (op_upper b)).
-             *** destruct (Rle_dec x (op_lower b)).
-                  ++++ left.
-                       split.
-                       lra.
-                       lra. 
-                  ++++ right.
-                       split.
-                       lra.
-                       lra.                       
-             *** left. 
-                 split.
-                 lra.
-                 lra.
-        -- unfold Rmax in *.
-           destruct (Rle_dec (op_upper a) (op_upper b)).
-           *** right. 
-               split.
-               lra.
-               lra.
-           *** destruct (Rlt_dec x(op_lower a)).
-                ---  right.
-                     split.
-                     lra.
-                     lra.
-               --- destruct (Rle_dec x (op_lower a)).
-                    +++ right. split. lra. lra.
-                    +++ left. split. lra. lra.
-Defined.   
+     repeat split ; handle_Rminmax ; lra.
+   - intros a b H [G1 G2].
+     destruct a, b.
+     unfold overlap, join, op_in in * ; simpl in *.
+     handle_Rminmax ; lra.
+Defined.
 
 Lemma lower_below_upper (F : CompleteFilter) a b :
   F a -> F b -> op_lower a < op_upper b.
@@ -572,7 +517,7 @@ Definition dual_fun (A : ApproximableMap) (x : R) :=
   filter2point (filter_map A (point2filter x)).
 
 Definition interpol (a : ClosedInterval) (b : OpenInterval) :
-  inside a b -> exists b' : OpenInterval, inside a b' /\ well_inside b' b.
+  clop_inside a b -> exists b' : OpenInterval, clop_inside a b' /\ well_inside b' b.
 Proof.
    intros.
    destruct a, b.
@@ -588,7 +533,7 @@ Proof.
     assert (C : c1 < c2).
     { unfold c1, c2. lra . }
     exists {| op_lower := c1; op_upper := c2; op_proper := C |}.
-    unfold inside in *.
+    unfold clop_inside in *.
     unfold op_lower in *.
     unfold cl_lower in *.
     unfold cl_upper in *.
@@ -713,38 +658,40 @@ Defined.
 
 
 Lemma closed_in_from_open_in (x : R) (a : ClosedInterval) :
-  ((forall c, inside a c -> op_in x c) <-> cl_in x a).
+  ((forall c, clop_inside a c -> op_in x c) <-> cl_in x a).
 Proof.
   split. 
   - intro H.
     unfold cl_in.
     split.
     + destruct a as [a1 a2 prop_a].
-      unfold inside in *.
+      unfold clop_inside in *.
       simpl in *.
       admit.
     + admit.
   - intros x_in_a c ins_ac.
-    unfold well_inside, op_in, inside, cl_in in *.
+    unfold well_inside, op_in, clop_inside, cl_in in *.
     destruct a, c.
     simpl in *.
     lra.
 Admitted.
-Print inside.
+Print clop_inside.
 Check op_subtract.
 
-Lemma scott_continuty(b1 b2 : ClosedInterval) (O: OpenInterval): 
-      inside (cl_subtract b1 b2) O -> 
-      exists c1 c2 : OpenInterval, inside b1 c1 -> inside b2 c2 ->
-      well_inside (op_subtract c1 c2) O. 
+Lemma scott_continuity (b1 b2 : ClosedInterval) (O: OpenInterval):
+  clop_inside (cl_subtract b1 b2) O ->
+  exists c1 c2 : OpenInterval,
+    clop_inside b1 c1 /\ clop_inside b2 c2 /\ well_inside (op_subtract c1 c2) O.
 Proof.
    intros.
    destruct b1 as [x1 y1 b1_prop].
    destruct b2 as [x2 y2 b2_prop].
    destruct O as [O1 O2 O_prop].
-   destruct H. simpl in *.
+   destruct H as [H1 H2].
+   unfold clop_inside, well_inside in *.
+   simpl in *.
    pose (d1 := (O2 - y1 + x2)/4).
-   pose (d2 := (x1 -y2 - O1)/4).
+   pose (d2 := (x1 - y2 - O1)/4).
    pose (d := Rmin d1 d2).
    unfold Rmin in *.
    destruct (Rle_dec d1 d2). 
@@ -757,21 +704,10 @@ Proof.
                op_proper := G1|}.
      exists {| op_lower := x2 - d ;
                op_upper := y2 + d ;
-               op_proper := G2|}. 
-     unfold inside, well_inside in *. 
-     simpl in *.
-     split.
-      + unfold d1 in *.
-        unfold d2 in *. 
-        unfold d in *. 
-        lra. 
-        
-      + unfold d1 in *.
-        unfold d2 in *. 
-        unfold d in *. 
-        lra. 
-   - unfold inside, well_inside in *. simpl in *. 
-     assert (G1 : x1 - d < y1 +d).
+               op_proper := G2|}.
+     unfold d, d1, d2 in *; simpl.
+     nra.
+   - assert (G1 : x1 - d < y1 +d).
      {unfold d. unfold d2. lra. }
      assert (G2 : x2 - d < y2 +d).
      {unfold d. unfold d2. lra. }
@@ -781,23 +717,45 @@ Proof.
      exists {| op_lower := x2 - d ;
                op_upper := y2 + d ;
                op_proper := G2|}.
-    split.
-       +  unfold d1 in *.
-          unfold d2 in *. 
-          unfold d in *. simpl in *.  
-          lra. 
-       +  unfold d1 in *.
-          unfold d2 in *. 
-          unfold d in *. simpl in *.  
-          lra.
+     unfold d, d1, d2 in *; simpl.
+     nra.
 Defined.
 
-Lemma multip_is_open (a : PositiveInterval ) ( b : ClosedInterval ) : OpenInterval.
-Proof. 
-   refine{|op_lower := op_lower (closed_multp_open b (interval a));
-           op_upper := op_upper (closed_multp_open b (interval a))|}.
-Admitted.
+Lemma lipschitz_is_continuous a b (f : bowtie a b) c :
+  clop_inside c a -> cl_continuous_on f c.
+Proof.
+  cheat.
+Qed.
 
+Lemma cl_op_trans a b c :
+  clop_inside a b -> opop_inside b c -> clop_inside a c.
+Proof.
+  cheat.
+Qed.
+
+Lemma inside_mul x y a1 a2 b O:
+  cl_in x (closure a1) ->
+  cl_in y (closure a2) ->
+  separated a1 a2 ->
+  clop_inside b O ->
+  clop_inside (cl_scalar_mul (x - y) b) (op_multiply O (op_subtract a1 a2)).
+Proof.
+  intros x_in_a1 y_in_a2 sep_a1a2 [b_in_O1 b_in_O2].
+  assert (xy_not_zero : x - y <> 0).
+  { destruct a1, a2.
+    unfold cl_in, closure, separated in * ; simpl in *.
+    lra.
+  }
+  apply (cl_op_trans _ (op_scalar_mul (x - y) xy_not_zero O)).
+  - destruct a1, a2, b, O.
+    unfold clop_inside, cl_scalar_mul, op_scalar_mul, cl_in, separated in * ;
+    simpl in *.
+    handle_Rminmax ; nra.
+  - destruct a1, a2, b, O.
+    unfold opop_inside, cl_scalar_mul, op_scalar_mul, cl_in, separated in * ;
+    simpl in *.
+    admit. (* difficult? *)
+Admitted.
 
 (* Main theorems *)
 
@@ -826,13 +784,74 @@ Proof.
      admit.
 Admitted.
 
+Lemma clop_in_trans x a b :
+  cl_in x a -> clop_inside a b -> op_in x b.
+Proof.
+  admit.
+Admitted.
 
 Theorem main_theorem2 (a : OpenInterval) (b : ClosedInterval) (f : bowtie a b) :
-  forall O : OpenInterval, inside b O ->
-  forall a0 : OpenInterval, inside (closure a0) a -> Delta a0 O (Approx f).
+  forall O : OpenInterval, clop_inside b O ->
+  forall a0 : OpenInterval, clop_inside (closure a0) a -> Delta a0 O (Approx f).
 Proof.
   intros O ins_bO c ins_c_a.
   intros a1 a2 wi_a1c wi_a2c sep_a1a2.
+  assert (cont_f_a1 : cl_continuous_on f (closure a1)).
+  { apply lipschitz_is_continuous.
+    destruct a1, a, c; unfold clop_inside, well_inside in *.
+    simpl in *.
+    lra.
+  }
+  assert (cont_f_a2 : cl_continuous_on f (closure a2)).
+  { apply lipschitz_is_continuous.
+    destruct a2, a, c; unfold clop_inside, well_inside in *.
+    simpl in *.
+    lra.
+  }
+  destruct (cl_image f (closure a1) (cont_f_a1)) as [b1 imag_b1].
+  destruct (cl_image f (closure a2) (cont_f_a2)) as [b2 imag_b2].
+  destruct (scott_continuity b1 b2 (op_multiply O (op_subtract a1 a2)))
+    as [c1 [c2 [b1_in_c1 [b2_in_c2 H]]]].
+  { destruct imag_b1 as [H1 H2].
+    destruct imag_b2 as [G1 G2].
+    destruct b1 as [b1_m b1_M b1_prop].
+    destruct b2 as [b2_m b2_M b2_prop].
+    unfold cl_subtract, clop_inside, cl_in  in *; simpl in *.
+    destruct (H2 b1_m) as [xm [xm_in_a1 Exm]]. { lra. }
+    destruct (H2 b1_M) as [xM [xM_in_a1 ExM]]. { lra. }
+    destruct (G2 b2_m) as [ym [ym_in_a2 Eym]]. { lra. }
+    destruct (G2 b2_M) as [yM [yM_in_a2 EyM]]. { lra. }
+    rewrite <- Exm.
+    rewrite <- ExM.
+    rewrite <- Eym.
+    rewrite <- EyM.
+    split.
+    - assert (K : op_in (f xm - f yM) (op_multiply O (op_subtract a1 a2))).
+      { apply (clop_in_trans _ (cl_scalar_mul (xm - yM) b)).
+        - admit. (* apply f, then it's easy *)
+        - now apply inside_mul.
+      }
+      apply K.
+    - admit. (* symmetric to the above. *)
+  }
+  exists c1, c2.
+  repeat split.
+  - apply (Rlt_le_trans _ (cl_lower b1)).
+    + apply b1_in_c1.
+    + now apply imag_b1.
+  - apply (Rle_lt_trans _ (cl_upper b1)).
+    + now apply imag_b1.
+    + apply b1_in_c1.
+  - apply (Rlt_le_trans _ (cl_lower b2)).
+    + apply b2_in_c2.
+    + now apply imag_b2.
+  - apply (Rle_lt_trans _ (cl_upper b2)).
+    + now apply imag_b2.
+    + apply b2_in_c2.
+  - apply H.
+  - apply H.
+Admitted.
+
 
 
 
@@ -852,12 +871,12 @@ Proof.
 Admitted.
 
 Theorem strong_main_theorem1 (a O : OpenInterval) (A : Bowtie a O):
-  exists b, inside b O /\ strong_delta a b (dual_fun A).
+  exists b,clop_inside b O /\ strong_delta a b (dual_fun A).
 Admitted.
 
 Theorem strong_main_theorem2 (a : OpenInterval) (b : ClosedInterval) (f : bowtie a b) :
   forall O : OpenInterval,
-    inside b O ->
+   clop_inside b O ->
     StrongDelta a O (Approx f).
 Proof.
 Admitted.
