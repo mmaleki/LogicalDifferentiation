@@ -69,11 +69,7 @@ Proof.
   now apply Rminmax.
 Defined.
 
-Definition positive_interval (a : OpenInterval):=
-op_lower a >0.
 
-Definition negative_interval (a : OpenInterval):=
-op_upper a <0.
 
 Definition open_multp_open (a b :OpenInterval):OpenInterval.
 Proof.
@@ -82,36 +78,42 @@ Proof.
             op_upper := Rmax (Rmax ((op_lower a) * (op_lower b)) ((op_lower a) * (op_upper b)))
                              (Rmax ((op_upper a) * (op_lower b)) ((op_upper a) * (op_upper b)))|}.
    unfold Rmin , Rmax in *. simpl in *.
-   destruct (Rle_dec (op_lower a * op_lower b) (op_lower a * op_upper b)).
-    - destruct (Rle_dec (op_upper a * op_lower b) (op_upper a * op_upper b)). 
-      + destruct(Rle_dec (op_lower a * op_lower b) (op_upper a * op_lower b)).
-        -- destruct (Rle_dec (op_lower a * op_upper b) (op_upper a * op_upper b)).
-           *** admit.
+   destruct a as [a1 a2 a_prop].
+   destruct b as [b1 b2 b_prop]. simpl in *.
+   destruct (Rle_dec (a1 * b1) (a1 * b2)).
+    - destruct (Rle_dec (a2 * b1) (a2 * b2) ). 
+      + destruct(Rle_dec (a1 * b1) (a2 * b1)).
+        -- destruct (Rle_dec (a1 * b2) (a2 * b2)). 
+           *** destruct (Rlt_dec 0 a1).  
+               --- assert (G: a1*b1<a1*b2).
+                   { apply (Rmult_lt_compat_l a1 b1 b2 r3 b_prop). }
+                   apply (Rlt_le_trans (a1 * b1) (a1*b2) (a2*b2)). lra. lra.
+               ---admit.
            *** admit. 
-        -- destruct (Rle_dec (op_lower a * op_upper b) (op_upper a * op_upper b)).
+        -- destruct (Rle_dec (a1 * b2) (a2 * b2)).
            *** admit.
            *** admit.
-      + destruct (Rle_dec (op_lower a * op_lower b) (op_upper a * op_upper b)).
-        -- destruct (Rle_dec (op_lower a * op_upper b) (op_upper a * op_lower b)).
+      + destruct (Rle_dec (a1 * b1) (a2 * b2)).
+        -- destruct (Rle_dec (a1 * b2) (a2 * b1)).
            *** admit.
            *** admit.
-        -- destruct (Rle_dec (op_lower a * op_upper b) (op_upper a * op_lower b)).
+        -- destruct (Rle_dec (a1 * b2) (a2 * b1)).
            *** admit.
            *** admit.
     
-    - destruct ( Rle_dec (op_upper a * op_lower b) (op_upper a * op_upper b)).
-      + destruct (Rle_dec (op_lower a * op_upper b) (op_upper a * op_lower b)).
-        -- destruct (Rle_dec (op_lower a * op_lower b) (op_upper a * op_upper b)).
+    - destruct ( Rle_dec (a2 * b1) (a2 * b2)).
+      + destruct (Rle_dec (a1 * b2) (a2 * b1)).
+        -- destruct (Rle_dec (a1 * b1) (a2 * b2)).
           +++ admit.
           +++ admit.
-        -- destruct (Rle_dec (op_lower a * op_lower b) (op_upper a * op_upper b)).
+        -- destruct (Rle_dec (a1 * b1) (a2 * b2)).
           +++ admit.
           +++ admit.
-      + destruct (Rle_dec (op_lower a * op_upper b) (op_upper a * op_upper b)).
-        -- destruct (Rle_dec (op_lower a * op_lower b) (op_upper a * op_lower b)).
+      + destruct (Rle_dec (a1 * b2) (a2 * b2)).
+        -- destruct (Rle_dec (a1 * b1) (a2 * b1)).
            +++ admit.
            +++ admit.
-        --destruct (Rle_dec (op_lower a * op_lower b) (op_upper a * op_lower b)).
+        --destruct (Rle_dec (a1 * b1) (a2 * b1)).
            +++ admit.
            +++ admit.
 Admitted.
@@ -791,9 +793,10 @@ Proof.
 Defined.
 
 Lemma multip_is_open (a : PositiveInterval ) ( b : ClosedInterval ) : OpenInterval.
-Proof.
-Admitted.  
-
+Proof. 
+   refine{|op_lower := op_lower (closed_multp_open b (interval a));
+           op_upper := op_upper (closed_multp_open b (interval a))|}.
+Admitted.
 
 
 (* Main theorems *)
